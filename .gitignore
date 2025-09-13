@@ -16,6 +16,7 @@ dependency-reduced-pom.xml
 # --- Sensitive configs ---
 src/main/resources/application.properties
 src/main/resources/application.yml
+.env
 
 ### STS ###
 .apt_generated
@@ -44,3 +45,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# --- Developer Environments ---
+MarcLocalEnvironment.env
