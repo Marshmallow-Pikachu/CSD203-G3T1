@@ -4,6 +4,19 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# --- Spring Boot runtime files ---
+*.log
+*.h2.db
+*.db
+
+# --- Maven extras ---
+dependency-reduced-pom.xml
+.mvn/wrapper/maven-wrapper.properties
+
+# --- Sensitive configs ---
+src/main/resources/application.properties
+src/main/resources/application.yml
+
 ### STS ###
 .apt_generated
 .classpath
