@@ -16,9 +16,6 @@ dependency-reduced-pom.xml
 # --- Sensitive configs ---
 src/main/resources/application.properties
 src/main/resources/application.yml
-
-# no further changes to sample properties until i remove this
-src/main/resources/application-sample.properties 
 *.env
 
 ### STS ###
