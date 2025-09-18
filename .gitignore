@@ -1,0 +1,50 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# --- Spring Boot runtime files ---
+*.log
+*.h2.db
+*.db
+
+# --- Maven extras ---
+dependency-reduced-pom.xml
+.mvn/wrapper/maven-wrapper.properties
+
+# --- Sensitive configs ---
+src/main/resources/application.properties
+src/main/resources/application.yml
+.env
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# --- Developer Environments ---
+MarcLocalEnvironment.env
