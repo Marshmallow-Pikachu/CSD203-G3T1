@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pricegrid</groupId>
 	<artifactId>pricegrid</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.5-SNAPSHOT</version>
 	<name>PriceGrid</name>
 	<description>Tariff rate dashboard and calculator</description>
 	<url/>
