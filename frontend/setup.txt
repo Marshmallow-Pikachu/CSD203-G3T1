@@ -1,0 +1,13 @@
+## Setup Process
+npm create vite@latest pricegrid-frontend -- --template react-ts (Already Created Project)
+cd pricegrid-frontend
+npm install
+
+## Check if it works
+npm run dev
+
+## API to call backend
+npm install axios @tanstack/react-query @tanstack/react-table
+
+
+
