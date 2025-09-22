@@ -1,7 +1,7 @@
 ## Setup Process
 npm create vite@latest pricegrid-frontend -- --template react-ts (Already Created Project)
 cd pricegrid-frontend
-npm install
+npm install package.json
 
 ## Check if it works
 npm run dev
