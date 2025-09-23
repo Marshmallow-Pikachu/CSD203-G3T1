@@ -1,0 +1,26 @@
+# === base URL (Swap when changing from local to deployment) ===
+
+# Local backend (when running Spring Boot on your laptop)
+@baseUrl = http://localhost:8080
+
+# Azure deployed backend (when app is live on Azure App Service)
+# @baseUrl = https://csd-asssignment-g3-1.azurewebsites.net
+
+# === API Request ===
+### Health check
+GET {{baseUrl}}/api/v1/health/ping
+
+### List all countries
+GET {{baseUrl}}/api/v1/countries
+
+### Get single country (Singapore)
+GET {{baseUrl}}/api/v1/countries/SG
+
+### Tariff lookup - Singapore → US (MFN, horses)
+GET {{baseUrl}}/api/v1/tariffs/lookup?exporter=SG&importer=US&hsCode=010121&agreement=MFN
+
+### Tariff lookup - Singapore → JP (MFN, rice)
+GET {{baseUrl}}/api/v1/tariffs/lookup?exporter=SG&importer=JP&hsCode=100630&agreement=MFN
+
+### Tariff lookup - Singapore → JP (CPTPP, rice - preferential)
+GET {{baseUrl}}/api/v1/tariffs/lookup?exporter=SG&importer=JP&hsCode=100630&agreement=CPTPP
