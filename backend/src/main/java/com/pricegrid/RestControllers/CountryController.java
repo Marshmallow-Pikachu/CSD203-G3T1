@@ -1,4 +1,4 @@
-package com.pricegrid.RestControllers;
+package com.pricegrid.restcontrollers;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
