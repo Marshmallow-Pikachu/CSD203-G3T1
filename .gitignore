@@ -15,6 +15,7 @@ dependency-reduced-pom.xml
 
 # --- Sensitive configs ---
 src/main/resources/application.properties
+application.properties
 src/main/resources/application.yml
 *.env
 
