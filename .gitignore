@@ -49,3 +49,5 @@ build/
 
 # --- Developer Environments ---
 MarcLocalEnvironment.env
+run-local.psi
+run-local.ps1

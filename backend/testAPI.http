@@ -16,11 +16,70 @@ GET {{baseUrl}}/api/v1/countries
 ### Get single country (Singapore)
 GET {{baseUrl}}/api/v1/countries/SG
 
-### Tariff lookup - Singapore → US (MFN, horses)
+### Lookup specific tariff (SG → US, MFN, horses)
 GET {{baseUrl}}/api/v1/tariffs/lookup?exporter=SG&importer=US&hsCode=010121&agreement=MFN
 
-### Tariff lookup - Singapore → JP (MFN, rice)
-GET {{baseUrl}}/api/v1/tariffs/lookup?exporter=SG&importer=JP&hsCode=100630&agreement=MFN
+### Dashboard list: all tariffs for US imports
+GET {{baseUrl}}/api/v1/tariffs/list?importer=US
 
-### Tariff lookup - Singapore → JP (CPTPP, rice - preferential)
-GET {{baseUrl}}/api/v1/tariffs/lookup?exporter=SG&importer=JP&hsCode=100630&agreement=CPTPP
+### Dashboard list: all tariffs for SG → JP under CPTPP
+GET {{baseUrl}}/api/v1/tariffs/list?importer=JP&exporter=SG&agreement=CPTPP
+
+### 1. Basic landed cost calculation (SG → US, MFN, 2 units, FOB)
+POST {{baseUrl}}/api/calculate/landed-cost
+Content-Type: application/json
+
+{
+  "exporter": "Singapore",
+  "importer": "United States",
+  "hsCode": "010121",
+  "agreement": "MFN",
+  "goods_value": 1000,
+  "quantity": 2,
+  "freight": 50,
+  "insurance": 100
+}
+
+### 2. CIF country example (SG → JP, MFN, rice)
+POST {{baseUrl}}/api/calculate/landed-cost
+Content-Type: application/json
+
+{
+  "exporter": "Singapore",
+  "importer": "Japan",
+  "hsCode": "100630",
+  "agreement": "MFN",
+  "goods_value": 500,
+  "quantity": 1,
+  "freight": 40,
+  "insurance": 20
+}
+
+### 3. Preferential agreement example (SG → JP, CPTPP, rice)
+POST {{baseUrl}}/api/calculate/landed-cost
+Content-Type: application/json
+
+{
+  "exporter": "Singapore",
+  "importer": "Japan",
+  "hsCode": "100630",
+  "agreement": "CPTPP",
+  "goods_value": 500,
+  "quantity": 1,
+  "freight": 40,
+  "insurance": 20
+}
+
+### 4. Edge case: quantity omitted (defaults to 1)
+POST {{baseUrl}}/api/calculate/landed-cost
+Content-Type: application/json
+
+{
+  "exporter": "Singapore",
+  "importer": "United States",
+  "hsCode": "010121",
+  "agreement": "MFN",
+  "goods_value": 750,
+  "freight": 25,
+  "insurance": 10
+}
