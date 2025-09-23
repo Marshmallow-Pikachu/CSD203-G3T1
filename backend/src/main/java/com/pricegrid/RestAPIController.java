@@ -20,13 +20,10 @@ public class RestAPIController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+   
     @GetMapping("/realquery")
-    public String getMethodName(@RequestParam String param) {
-        return new String();
-    }
-    
     public Map<String, Object> realSearch(
-        @RequestParam int hscode, 
+        @RequestParam String hscode, 
         @RequestParam String exp_country,
         @RequestParam String imp_country,
         @RequestParam double cost,
