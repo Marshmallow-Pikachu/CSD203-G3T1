@@ -1,0 +1,98 @@
+.container {
+  position: fixed;
+  padding: 2.5rem 4rem; /* py-10 px-16 */
+  outline: none;
+}
+
+.title {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 700;     /* font-bold */
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* space-y-3 */
+}
+
+.menuItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem; /* space-x-2 */
+}
+
+.bulletContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bullet {
+  font-size: 1rem;      /* text-base */
+  line-height: 1;       /* leading-none */
+}
+
+.line {
+  width: 1px;
+  height: 1.25rem;      /* h-5 */
+  background-color: black;
+}
+
+.link {
+  font-size: 0.875rem;  /* text-sm */
+  font-weight: 600;     /* font-semibold */
+  text-decoration: none;
+}
+
+
+/* Mobile Header */
+.mobileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.mobileTitle {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.hamburger {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Mobile Menu */
+.mobileMenu {
+  display: block;
+  padding: 0.5rem 1rem;
+  background-color: #fff;
+}
+
+.mobileMenuItem {
+  margin: 0.5rem 0;
+}
+
+/* Hide mobile header on desktop */
+@media (min-width: 768px) {
+  .mobileHeader,
+  .mobileMenu {
+    display: none;
+  }
+
+  .container {
+    display: block;
+  }
+}
+
+/* Hide sidebar on mobile by default */
+@media (max-width: 767px) {
+  .container {
+    display: none;
+  }
+}
