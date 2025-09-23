@@ -6,8 +6,14 @@ npm install package.json
 ## Check if it works
 npm run dev
 
+
+Everything should be fine but just in case can try these commands if missing dependencies?
+
 ## API to call backend
 npm install axios @tanstack/react-query @tanstack/react-table
+
+## Routings if not installed
+npm install react-router-dom
 
 
 
