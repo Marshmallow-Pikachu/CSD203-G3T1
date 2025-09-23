@@ -20,31 +20,79 @@ public class RestAPIController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<Map<String, Object>> realSearch(
+    @GetMapping("/realquery")
+    public String getMethodName(@RequestParam String param) {
+        return new String();
+    }
+    
+    public Map<String, Object> realSearch(
         @RequestParam int hscode, 
-        @RequestParam String src_country,
-        @RequestParam String dest_country,
+        @RequestParam String exp_country,
+        @RequestParam String imp_country,
         @RequestParam double cost,
         @RequestParam int quantity,
         @RequestParam double freight,
-        @RequestParam double insurance,
-        @RequestParam boolean FTA) {
+        @RequestParam double insurance
+        /*,@RequestParam boolean FTA*/) {
 
         
         // check if dest_country uses CIF or FOB
         // eg singapore uses CIF. US uses FOB
         // !might need this------------------------------------------
-        //boolean CIF; 
+        // boolean CIF; 
 
+                String sql = """
+            SELECT 
+                tr.rate_percent,
+                ag.agreement_name,
+                hc.hs_code,
+                hc.description AS hs_description,
+                exp.country_name AS exporter,
+                imp.country_name AS importer
+            FROM tariff_rates tr
+            JOIN hs_codes hc ON tr.hs_code_id = hc.id
+            JOIN countries exp ON tr.exporter_id = exp.id
+            JOIN countries imp ON tr.importer_id = imp.id
+            JOIN agreements ag ON tr.agreement_id = ag.id
+            WHERE hc.hs_code = ?
+            AND exp.country_name = ?
+            AND imp.country_name = ?
+            AND (tr.valid_to IS NULL OR tr.valid_to >= CURRENT_DATE)
+            ORDER BY tr.rate_percent ASC
+            LIMIT 1;
+        """;
 
-        return null;
+        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql,
+            hscode, exp_country, imp_country);
+
+        if (results.isEmpty()) {
+            throw new RuntimeException("No tariff rate found for given parameters.");
+        }
+
+        Map<String, Object> tariffData = results.get(0);
+        double ratePercent = ((Number) tariffData.get("rate_percent")).doubleValue();
+        
+        double tariffDuty = cost * quantity * (ratePercent / 100);
+        double totalCharges = cost * quantity + tariffDuty + freight + insurance;
+
+        Map<String, Object> response = new TreeMap<>();
+        response.put("exporter", exp_country);
+        response.put("importer", imp_country);
+        response.put("hs_code", hscode);
+        response.put("tariff_rate_percent", ratePercent);
+        response.put("tariff_duty", tariffDuty);
+        response.put("freight", freight);
+        response.put("insurance", insurance);
+        response.put("total_charges", totalCharges);
+
+        return response;
     }
     
     @GetMapping("query")
     public Map<String, Object> dummySearch() {
         String hscode = "040221"; //milk
-        String src_country = "Singapore";
-        String dest_country = "United States";
+        String exp_country = "Singapore";
+        String imp_country = "United States";
         double cost = 100.01;
         int quantity = 2;
         double freight = 30.33;
@@ -77,7 +125,7 @@ public class RestAPIController {
         """;
 
         List<Map<String, Object>> results = jdbcTemplate.queryForList(sql,
-            hscode, src_country, dest_country);
+            hscode, exp_country, imp_country);
 
         if (results.isEmpty()) {
             throw new RuntimeException("No tariff rate found for given parameters.");
@@ -90,8 +138,8 @@ public class RestAPIController {
         double totalCharges = cost * quantity + tariffDuty + freight + insurance;
 
         Map<String, Object> response = new TreeMap<>();
-        response.put("exporter", src_country);
-        response.put("importer", dest_country);
+        response.put("exporter", exp_country);
+        response.put("importer", imp_country);
         response.put("hs_code", hscode);
         response.put("tariff_rate_percent", ratePercent);
         response.put("tariff_duty", tariffDuty);
