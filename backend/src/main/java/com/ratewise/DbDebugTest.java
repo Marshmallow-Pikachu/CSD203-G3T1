@@ -1,4 +1,4 @@
-package com.pricegrid;
+package com.ratewise;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
