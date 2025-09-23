@@ -52,3 +52,5 @@ build/
 # --- Developer Environments ---
 MarcLocalEnvironment.env
 *.DS_Store
+run-local.psi
+run-local.ps1
