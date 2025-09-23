@@ -16,7 +16,7 @@ export default function Login() {
     //     { username: email, password }, // backend expects username/password
     //     { withCredentials: true }
     //   );
-      setMessage("✅ Login successful!");
+    // Deal with sessions somehow
       navigate("/");
 
     //   console.log("Response:", res.data);
