@@ -1,13 +1,13 @@
-package com.pricegrid;
+package com.ratewise;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class PriceGridApplication {
+public class RateWiseApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(PriceGridApplication.class, args);
+		SpringApplication.run(RateWiseApplication.class, args);
 	}
 
 }

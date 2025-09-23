@@ -1,4 +1,4 @@
-package com.pricegrid;
+package com.ratewise;
 
 import java.util.List;
 

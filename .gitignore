@@ -13,10 +13,12 @@ target/
 dependency-reduced-pom.xml
 .mvn/wrapper/maven-wrapper.properties
 
+# --- Frontend library
+*/node_modules*
+
 # --- Sensitive configs ---
-src/main/resources/application.properties
-application.properties
-src/main/resources/application.yml
+*/application.properties
+*/application.yml
 *.env
 
 ### STS ###
@@ -49,5 +51,6 @@ build/
 
 # --- Developer Environments ---
 MarcLocalEnvironment.env
+*.DS_Store
 run-local.psi
 run-local.ps1

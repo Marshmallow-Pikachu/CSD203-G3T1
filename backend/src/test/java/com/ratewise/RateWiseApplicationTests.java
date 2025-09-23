@@ -1,10 +1,10 @@
-package com.pricegrid;
+package com.ratewise;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class PriceGridApplicationTests {
+class RateWiseApplicationTests {
 
 	@Test
 	void contextLoads() {
