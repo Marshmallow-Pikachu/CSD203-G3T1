@@ -1,5 +1,5 @@
-package com.pricegrid.controllers;
-import com.pricegrid.services.CalculatorService;
+package com.ratewise.restcontrollers;
+import com.ratewise.services.CalculatorService;
 
 import org.springframework.web.bind.annotation.*;
 import java.util.*;

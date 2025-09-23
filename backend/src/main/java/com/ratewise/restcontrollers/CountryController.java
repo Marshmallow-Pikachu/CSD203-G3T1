@@ -1,4 +1,4 @@
-package com.pricegrid.restcontrollers;
+package com.ratewise.restcontrollers;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;

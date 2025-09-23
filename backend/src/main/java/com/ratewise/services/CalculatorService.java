@@ -1,4 +1,4 @@
-package com.pricegrid.services;
+package com.ratewise.services;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
