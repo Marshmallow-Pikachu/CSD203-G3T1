@@ -1,0 +1,43 @@
+# === base URL (Swap when changing from local to deployment) ===
+
+# Local backend (when running Spring Boot on your laptop)
+@baseUrl = http://localhost:8080
+
+# Azure deployed backend (when app is live on Azure App Service)
+# @baseUrl = https://csd-asssignment-g3-1.azurewebsites.net
+
+# === 1. REGISTRATION OF AN ACCOUNT ===
+### Registration of an Account
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "happyjoyjoy",
+  "email": "happy@example.com",
+  "password": "blahBlah123"
+}
+
+# === 2. LOGGING INTO AN ACCOUNT ===  
+### Logging into an Account
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "happyjoyjoy",
+  "password": "blahBlah123"
+}
+
+# === 3. VALIDATION OF TOKEN ===
+### Validation of account token
+GET {{baseUrl}}/api/v1/auth/validate
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+# === 4. GET CURRENT USER INFO ===
+### Get current user information
+GET {{baseUrl}}/api/v1/auth/me
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+# === 5. LOGGING OUT OF AN ACCOUNT ===
+### Logout user (Delete mapping)
+DELETE {{baseUrl}}/api/v1/auth/logout
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
