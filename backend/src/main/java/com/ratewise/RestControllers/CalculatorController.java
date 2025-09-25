@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 
 @RestController
-@RequestMapping("/api/calculate")
+@RequestMapping("/api/v1/calculate")
 public class CalculatorController {
 
     private final CalculatorService calculatorService;

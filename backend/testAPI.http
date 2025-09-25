@@ -26,7 +26,7 @@ GET {{baseUrl}}/api/v1/tariffs/list?importer=US
 GET {{baseUrl}}/api/v1/tariffs/list?importer=JP&exporter=SG&agreement=CPTPP
 
 ### 1. Basic landed cost calculation (SG → US, MFN, 2 units, FOB)
-POST {{baseUrl}}/api/calculate/landed-cost
+POST {{baseUrl}}/api/v1/calculate/landed-cost
 Content-Type: application/json
 
 {
@@ -41,7 +41,7 @@ Content-Type: application/json
 }
 
 ### 2. CIF country example (SG → JP, MFN, rice)
-POST {{baseUrl}}/api/calculate/landed-cost
+POST {{baseUrl}}/api/v1/calculate/landed-cost
 Content-Type: application/json
 
 {
@@ -56,7 +56,7 @@ Content-Type: application/json
 }
 
 ### 3. Preferential agreement example (SG → JP, CPTPP, rice)
-POST {{baseUrl}}/api/calculate/landed-cost
+POST {{baseUrl}}/api/v1/calculate/landed-cost
 Content-Type: application/json
 
 {
@@ -71,7 +71,7 @@ Content-Type: application/json
 }
 
 ### 4. Edge case: quantity omitted (defaults to 1)
-POST {{baseUrl}}/api/calculate/landed-cost
+POST {{baseUrl}}/api/v1/calculate/landed-cost
 Content-Type: application/json
 
 {
