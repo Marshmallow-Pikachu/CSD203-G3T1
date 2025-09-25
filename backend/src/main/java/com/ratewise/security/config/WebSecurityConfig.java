@@ -53,11 +53,15 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints (no authentication required)
                         .requestMatchers("/").permitAll()
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/health/**").permitAll()
                         .requestMatchers("/db/**").permitAll()
 
                         // Protected endpoints (authentication required)
+                        .requestMatchers("/api/v1/auth/validate").authenticated()
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
+                        .requestMatchers("/api/v1/auth/me").authenticated()
                         .requestMatchers("/api/v1/countries/**").authenticated()
                         .requestMatchers("/api/v1/tariffs/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
