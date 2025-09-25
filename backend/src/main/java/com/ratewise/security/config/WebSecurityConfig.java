@@ -51,14 +51,17 @@ public class WebSecurityConfig {
         @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .csrf(csrf -> csrf.disable())
-            // ✅ Enable CORS and use our configurationSource bean
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                        //allow preflight OPTIONS
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
+                .csrf(csrf -> csrf.disable()) 
+                .cors(cors -> cors.disable()) 
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // for swagger UI
+                        .requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html"
+                        ).permitAll()                
                         // Public endpoints (no authentication required)
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
@@ -152,12 +155,19 @@ public class WebSecurityConfig {
             @Override
             protected boolean shouldNotFilter(HttpServletRequest request) {
                 String path = request.getRequestURI();
-                // ✅ Skip JWT for public endpoints
-                return "OPTIONS".equalsIgnoreCase(request.getMethod()) ||
-                       path.startsWith("/api/v1/auth/") ||
-                       path.startsWith("/api/v1/health/") ||
-                       path.startsWith("/db/") ||
-                       path.equals("/");
+
+                // Skip JWT validation for SwaggerUI
+                if (path.startsWith("/v3/api-docs/") ||
+                    path.startsWith("/swagger-ui/") ||
+                    path.equals("/swagger-ui.html")) {
+                    return true;
+                }
+
+                // Skip JWT validation for public endpoints
+                return path.startsWith("/api/v1/auth/") ||
+                        path.startsWith("/api/v1/health/") ||
+                        path.startsWith("/db/") ||
+                        path.equals("/");
             }
         };
     }
