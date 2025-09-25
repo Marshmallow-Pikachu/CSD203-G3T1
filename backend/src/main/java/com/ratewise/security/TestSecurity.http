@@ -12,9 +12,9 @@ POST {{baseUrl}}/api/v1/auth/register
 Content-Type: application/json
 
 {
-  "username": "happyjoyjoy",
-  "email": "happy@example.com",
-  "password": "blahBlah123"
+  "username": "soniapoh",
+  "email": "soniapoh@example.com",
+  "password": "Sonia123"
 }
 
 # === 2. LOGGING INTO AN ACCOUNT ===  
@@ -23,8 +23,8 @@ POST {{baseUrl}}/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "username": "happyjoyjoy",
-  "password": "blahBlah123"
+  "username": "soniapoh",
+  "password": "Sonia123"
 }
 
 # === 3. VALIDATION OF TOKEN ===
