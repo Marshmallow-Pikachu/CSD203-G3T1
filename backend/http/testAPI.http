@@ -12,7 +12,7 @@ GET {{baseUrl}}/api/v1/health/ping
 
 ### List all countries
 GET {{baseUrl}}/api/v1/countries
-Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
 ### Get single country (Singapore)
 GET {{baseUrl}}/api/v1/countries/SG
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE

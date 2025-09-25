@@ -1,0 +1,95 @@
+@baseUrl = http://localhost:8080
+
+# Azure deployed backend (when app is live on Azure App Service)
+# @{{baseUrl}} = https://csd-asssignment-g3-1.azurewebsites.net
+
+
+### 1) Happy path (MFN, dates overlap)
+POST {{baseUrl}}/api/v1/calculate/landed-cost
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
+
+{
+  "exporter": "Singapore",
+  "importer": "United States",
+  "hsCode": "010121",
+  "agreement": "MFN",
+  "goods_value": 1000,
+  "quantity": 2,
+  "freight": 50,
+  "insurance": 100,
+  "start_date": "01/09/2025",
+  "end_date": "30/09/2025"
+}
+
+###
+
+### 2) Only one date provided (should be treated as single-day window)
+POST {{baseUrl}}/api/v1/calculate/landed-cost
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
+
+{
+  "exporter": "SG",
+  "importer": "US",
+  "hsCode": "010121",
+  "agreement": "MFN",
+  "goods_value": 500,
+  "quantity": 1,
+  "start_date": "15/09/2025"
+}
+
+###
+
+### 3) Swapped dates (service should auto-correct)
+POST {{baseUrl}}/api/v1/calculate/landed-cost
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
+
+{
+  "exporter": "Singapore",
+  "importer": "United States",
+  "hsCode": "010121",
+  "agreement": "MFN",
+  "goods_value": 750,
+  "quantity": 3,
+  "freight": 25,
+  "insurance": 0,
+  "start_date": "30/09/2025",
+  "end_date": "01/09/2025"
+}
+
+###
+
+### 4) Invalid country (lenient UX: returns JSON with error, ok=false)
+POST {{baseUrl}}/api/v1/calculate/landed-cost
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
+
+{
+  "exporter": "Singapure",  
+  "importer": "United States",
+  "hsCode": "010121",
+  "agreement": "MFN",
+  "goods_value": 1000,
+  "quantity": 1,
+  "start_date": "01/09/2025",
+  "end_date": "30/09/2025"
+}
+
+###
+
+### 5) Missing dates (defaults to today for both)
+POST {{baseUrl}}/api/v1/calculate/landed-cost
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
+
+
+{
+  "exporter": "SG",
+  "importer": "US",
+  "hsCode": "010121",
+  "agreement": "MFN",
+  "goods_value": 1200,
+  "quantity": 2
+}
