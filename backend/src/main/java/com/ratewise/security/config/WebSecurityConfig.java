@@ -51,6 +51,12 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // for swagger UI
+                        .requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html"
+                        ).permitAll()                
                         // Public endpoints (no authentication required)
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
@@ -130,6 +136,13 @@ public class WebSecurityConfig {
             @Override
             protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
                 String path = request.getRequestURI();
+
+                // Skip JWT validation for SwaggerUI
+                if (path.startsWith("/v3/api-docs/") ||
+                    path.startsWith("/swagger-ui/") ||
+                    path.equals("/swagger-ui.html")) {
+                    return true;
+                }
 
                 // Skip JWT validation for public endpoints
                 return path.startsWith("/api/v1/auth/") ||
