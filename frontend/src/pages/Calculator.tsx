@@ -1,11 +1,21 @@
 import InputField from "../components/InputField";
+import { api } from "../api/client";
 
 
 export default function Calculator(){
+    // const { data, isLoading, error } = useQuery<Tariff[]>({
+    //     queryKey: ["tariffs", country],
+    //     queryFn: async () => {
+    //         const res = await api.get(`/api/v1/tariffs/list?importer=${country}`);
+    //         return res.data;
+    //     },
+    // });
+
     return (
         <>
         <form>
             <div className="container">
+                <h2>Calculator</h2>
                 <div className="container-row">
                     <div className="child">
                         <InputField label="Product Description" name="product_description" type="" />
@@ -20,7 +30,7 @@ export default function Calculator(){
                         <InputField label="Shipping Cost (USD)" name="shipping_cost" type="number" />
                         <InputField label="Insurance" name="insurance" type="number" />
                         <div className="container-row">
-                            <InputField label="Start Date" name="start_date" type="date"/>
+                            <InputField label="Start Date" name="start_date" type="date" />
                             <InputField label="End Date" name="end_date" type="date" />
                         </div>
                     </div>
