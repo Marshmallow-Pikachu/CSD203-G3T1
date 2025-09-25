@@ -1,9 +1,13 @@
-package com.pricegrid.restcontrollers;
-import com.pricegrid.services.TariffService;
+package com.ratewise.restcontrollers;
+import java.util.List;
+import java.util.Map;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.*;
-import java.util.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ratewise.services.TariffService;
 
 
 
