@@ -7,7 +7,7 @@ input {
     width: 90%;
 }
 
-/* button {
+#calculate-button {
     margin: 1%;
     width: 95%;
     height: 50px;
@@ -15,12 +15,12 @@ input {
     font-size: larger;
     font-weight: bolder;
     background-color: rgb(200, 200, 200);
-} */
+}
 
-h2 {
-    /* font-size: 40px;
+#calculator-title {
+    font-size: 40px;
     font-weight: bold;
-    margin: 1%; */
+    margin: 1%;
 }
 
 .container {
