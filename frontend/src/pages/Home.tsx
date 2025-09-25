@@ -1,14 +1,15 @@
 import Query from "../components/Query"; 
-import { Sidebar } from "../components/Sidebar";
+import Logout from "../components/Logout";
+// import { Sidebar } from "../components/Sidebar";
+// import Test from "../components/Test";
+// import Countries from "./Countries";
 
 export default function Home() {
   return (
     <section>
-      {/* <section className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold text-blue-600">Home Page</h1>
-    </section> */}
-    {/* <Sidebar /> */}
     <Query country="US" />
+    <Logout/>
+    {/* <Test /> */}
     </section>
   );
 }

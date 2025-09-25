@@ -23,7 +23,7 @@ export default function Query({ country }:QueryProps) {
   const { data, isLoading, error } = useQuery<Tariff[]>({
     queryKey: ["tariffs", country],
     queryFn: async () => {
-      const res = await api.get(`/api/v1/tariffs/list?importer=${country}`);
+      const res = await api.get(`/api/v1/tariffs/list?importer=US`);
       return res.data;
     },
   });

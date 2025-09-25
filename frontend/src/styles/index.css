@@ -8,15 +8,15 @@ input {
 }
 
 button {
-    margin: 2%;
+    /* margin: 2%;
     width: 95%;
     height: 50px;
     border: 2px black solid;
     font-size: larger;
     font-weight: bolder;
-    background-color: rgb(200, 200, 200);
-
+    background-color: rgb(200, 200, 200); */
 }
+
 
 .container {
     border: 1px rgb(200, 200, 200) solid;
