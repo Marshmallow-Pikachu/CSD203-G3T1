@@ -6,6 +6,9 @@ import com.ratewise.security.dto.RegisterRequest;
 import com.ratewise.security.UserRepository;
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.User;
+
+import java.time.LocalDateTime;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -82,6 +85,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(password))
                 .enabled(true)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         userRepository.save(user);
@@ -90,5 +94,9 @@ public class AuthService {
     public User getCurrentUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
+    }
+
+    public void logout(Long userId) {
+        jwtUtil.invalidateUserToken(userId);
     }
 }

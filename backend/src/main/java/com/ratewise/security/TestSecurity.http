@@ -13,7 +13,7 @@ Content-Type: application/json
 
 {
   "username": "happyhappynoob",
-  "email": "happy@example.com",
+  "email": "happy123@example.com",
   "password": "Happy123"
 }
 
@@ -32,7 +32,6 @@ Content-Type: application/json
 GET {{baseUrl}}/api/v1/auth/validate
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
-# === 4. GET CURRENT USER INFO ===
 ### Get current user information
 GET {{baseUrl}}/api/v1/auth/me
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE

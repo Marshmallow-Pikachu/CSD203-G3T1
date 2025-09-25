@@ -7,20 +7,25 @@ input {
     width: 90%;
 }
 
-button {
-    /* margin: 2%;
+/* button {
+    margin: 1%;
     width: 95%;
     height: 50px;
     border: 2px black solid;
     font-size: larger;
     font-weight: bolder;
-    background-color: rgb(200, 200, 200); */
-}
+    background-color: rgb(200, 200, 200);
+} */
 
+h2 {
+    /* font-size: 40px;
+    font-weight: bold;
+    margin: 1%; */
+}
 
 .container {
     border: 1px rgb(200, 200, 200) solid;
-    width: 60%;
+    width: 50%;
     margin: 2%;
 }
 
@@ -31,7 +36,18 @@ button {
 .container-row {
     flex-direction: row;
     display: flex;
+    width:100%;
 }
+.container-row > .input-container {
+    flex:1;
+    width: 50%;
+}
+
+.container-row > .input-container > input {
+    width: 80%;
+
+}
+
 
 .child {
     width:50%;

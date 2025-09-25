@@ -48,7 +48,7 @@ public class WebSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
-    @Bean
+        @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
@@ -56,19 +56,27 @@ public class WebSecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // ✅ VERY IMPORTANT: allow preflight OPTIONS
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        //allow preflight OPTIONS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Public endpoints
-                .requestMatchers("/", "/api/v1/auth/**", "/api/v1/health/**", "/db/**").permitAll()
+                        // Public endpoints (no authentication required)
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/health/**").permitAll()
+                        .requestMatchers("/db/**").permitAll()
 
-                // Protected endpoints
-                .requestMatchers("/api/v1/countries/**").authenticated()
-                .requestMatchers("/api/v1/tariffs/**").authenticated()
-                .requestMatchers("/api/**").authenticated()
+                        // Protected endpoints (authentication required)
+                        .requestMatchers("/api/v1/auth/validate").authenticated()
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
+                        .requestMatchers("/api/v1/auth/me").authenticated()
+                        .requestMatchers("/api/v1/countries/**").authenticated()
+                        .requestMatchers("/api/v1/tariffs/**").authenticated()
+                        .requestMatchers("/api/**").authenticated()
 
-                .anyRequest().authenticated()
-            )
+                        // Require authentication for any other request
+                        .anyRequest().authenticated())
             // ✅ JWT filter
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .build();
