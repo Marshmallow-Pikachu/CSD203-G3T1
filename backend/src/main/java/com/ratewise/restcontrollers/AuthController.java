@@ -109,7 +109,19 @@ public class AuthController {
      */
     @DeleteMapping("/logout")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
-        SecurityUtils.getCurrentAuthentication();
-        return ResponseEntity.status(200).body("Logged out successfully"); 
+        try {   
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(400).body("Invalid token format");
+            }
+
+            String token = authHeader.substring(7);
+            Long userId = jwtUtil.getUserId(token);
+            
+            // Invalidate the user's token
+            authService.logout(userId);
+            return ResponseEntity.status(200).body("Logged out successfully"); 
+        } catch(Exception e) {
+            return ResponseEntity.status(400).body("Invalid token");
+        }
     }
 }
