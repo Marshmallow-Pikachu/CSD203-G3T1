@@ -12,18 +12,22 @@ GET {{baseUrl}}/api/v1/health/ping
 
 ### List all countries
 GET {{baseUrl}}/api/v1/countries
-
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 ### Get single country (Singapore)
 GET {{baseUrl}}/api/v1/countries/SG
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 ### Lookup specific tariff (SG → US, MFN, horses)
 GET {{baseUrl}}/api/v1/tariffs/lookup?exporter=SG&importer=US&hsCode=010121&agreement=MFN
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 ### Dashboard list: all tariffs for US imports
 GET {{baseUrl}}/api/v1/tariffs/list?importer=US
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 ### Dashboard list: all tariffs for SG → JP under CPTPP
 GET {{baseUrl}}/api/v1/tariffs/list?importer=JP&exporter=SG&agreement=CPTPP
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 ### 1. Basic landed cost calculation (SG → US, MFN, 2 units, FOB)
 POST {{baseUrl}}/api/v1/calculate/landed-cost

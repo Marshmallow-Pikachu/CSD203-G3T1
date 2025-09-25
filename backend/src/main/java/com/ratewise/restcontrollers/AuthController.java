@@ -6,6 +6,7 @@ import com.ratewise.security.User;
 import com.ratewise.security.dto.LoginRequest;
 import com.ratewise.security.dto.LoginResponse;
 import com.ratewise.security.dto.RegisterRequest;
+import com.ratewise.security.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
@@ -81,18 +82,22 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(400).body(Map.of("error", "Invalid token format"));
+            // Check if user is authenticated using SecurityContext
+            if (!SecurityUtils.isAuthenticated()) {
+                return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
             }
-
-            String token = authHeader.substring(7);
             
-            String email = jwtUtil.getEmail(token);
-            Long userId = jwtUtil.getUserId(token);
+            // Get current user email from SecurityContext
+            String email = SecurityUtils.getCurrentUserEmail();
+            if (email == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unable to get user information"));
+            }
+            
+            // Get user details from service
             User user = authService.getCurrentUser(email);
             
             Map<String, Object> userInfo = new LinkedHashMap<>();
-            userInfo.put("userId", userId);
+            userInfo.put("userId", user.getId());
             userInfo.put("username", user.getUsername());
             userInfo.put("email", user.getEmail());
             
@@ -108,6 +113,7 @@ public class AuthController {
      */
     @DeleteMapping("/logout")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+        SecurityUtils.getCurrentAuthentication();
         return ResponseEntity.status(200).body("Logged out successfully"); 
     }
 }
