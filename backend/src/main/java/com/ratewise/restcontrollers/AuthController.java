@@ -1,4 +1,4 @@
-package com.ratewise.security.Controller;
+package com.ratewise.restcontrollers;
 
 import com.ratewise.services.AuthService;
 import com.ratewise.security.util.JWTUtil;
