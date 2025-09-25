@@ -14,7 +14,7 @@ dependency-reduced-pom.xml
 .mvn/wrapper/maven-wrapper.properties
 
 # --- Frontend library
-*/node_modules*
+**/node_modules
 
 # --- Sensitive configs ---
 */application.properties

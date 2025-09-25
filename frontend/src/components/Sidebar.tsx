@@ -1,4 +1,4 @@
-import styles from './sidebar.module.css';
+import styles from '../styles/sidebar.module.css';
 
 const menuItems = [
   { name: 'HOME', href: '/' },

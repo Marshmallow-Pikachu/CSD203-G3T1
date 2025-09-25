@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+input {
+    border: 1px rgb(200, 200, 200) solid;
+    border-radius: 5px;
+    margin: 5px 10px;
+    width: 90%;
+}
+
+button {
+    margin: 2%;
+    width: 95%;
+    height: 50px;
+    border: 2px black solid;
+    font-size: larger;
+    font-weight: bolder;
+    background-color: rgb(200, 200, 200);
+
+}
+
+.container {
+    border: 1px rgb(200, 200, 200) solid;
+    width: 60%;
+    margin: 2%;
+}
+
+.input-label {
+    margin: 0px 10px;
+    font-weight: bold;
+}
+.container-row {
+    flex-direction: row;
+    display: flex;
+}
+
+.child {
+    width:50%;
+    height: 80%;
+    display:flex;
+    flex-direction: column;
+}
