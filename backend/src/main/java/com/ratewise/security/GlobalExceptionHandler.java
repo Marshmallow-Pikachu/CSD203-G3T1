@@ -1,4 +1,4 @@
-package com.pricegrid.security;
+package com.ratewise.security;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

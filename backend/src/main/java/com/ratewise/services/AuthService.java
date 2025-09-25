@@ -1,11 +1,11 @@
-package com.pricegrid.security.Service;
+package com.ratewise.services;
 
-import com.pricegrid.security.dto.LoginRequest;
-import com.pricegrid.security.dto.LoginResponse;
-import com.pricegrid.security.dto.RegisterRequest;
-import com.pricegrid.security.UserRepository;
-import com.pricegrid.security.util.JWTUtil;
-import com.pricegrid.security.User;
+import com.ratewise.security.dto.LoginRequest;
+import com.ratewise.security.dto.LoginResponse;
+import com.ratewise.security.dto.RegisterRequest;
+import com.ratewise.security.UserRepository;
+import com.ratewise.security.util.JWTUtil;
+import com.ratewise.security.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

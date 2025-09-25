@@ -1,4 +1,4 @@
-package com.pricegrid.security.config;
+package com.ratewise.security.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.pricegrid.security.util.JWTUtil;
+import com.ratewise.security.util.JWTUtil;
 
 import java.io.IOException;
 

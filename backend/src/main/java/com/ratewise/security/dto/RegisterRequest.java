@@ -1,4 +1,4 @@
-package com.pricegrid.security.dto;
+package com.ratewise.security.dto;
 
 import lombok.Getter;
 import lombok.Setter;

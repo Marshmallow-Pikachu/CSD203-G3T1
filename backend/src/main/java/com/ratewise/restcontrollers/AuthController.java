@@ -1,11 +1,11 @@
-package com.pricegrid.security.Controller;
+package com.ratewise.security.Controller;
 
-import com.pricegrid.security.Service.AuthService;
-import com.pricegrid.security.util.JWTUtil;
-import com.pricegrid.security.User;
-import com.pricegrid.security.dto.LoginRequest;
-import com.pricegrid.security.dto.LoginResponse;
-import com.pricegrid.security.dto.RegisterRequest;
+import com.ratewise.services.AuthService;
+import com.ratewise.security.util.JWTUtil;
+import com.ratewise.security.User;
+import com.ratewise.security.dto.LoginRequest;
+import com.ratewise.security.dto.LoginResponse;
+import com.ratewise.security.dto.RegisterRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;

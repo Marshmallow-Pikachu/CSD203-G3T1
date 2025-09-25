@@ -1,4 +1,4 @@
-package com.pricegrid.security.util;
+package com.ratewise.security.util;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

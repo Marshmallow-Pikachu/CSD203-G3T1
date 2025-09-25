@@ -1,4 +1,4 @@
-package com.pricegrid.security;
+package com.ratewise.security;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

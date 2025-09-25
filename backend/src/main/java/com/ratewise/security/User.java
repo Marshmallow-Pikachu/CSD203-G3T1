@@ -1,4 +1,4 @@
-package com.pricegrid.security;
+package com.ratewise.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
