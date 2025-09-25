@@ -1,12 +1,12 @@
-package com.ratewise.controllers;
-import java.util.Map;
 
+package com.ratewise.restcontrollers;
+import com.ratewise.services.CalculatorService;
+import java.util.Map;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ratewise.services.CalculatorService;
 
 /**
  * CalculationController
