@@ -11,24 +11,24 @@ target/
 
 # --- Maven extras ---
 dependency-reduced-pom.xml
-.mvn/wrapper/maven-wrapper.properties
+*.mvn/wrapper/maven-wrapper.properties
 
 # --- Frontend library
-*/node_modules*
+**/node_modules
 
 # --- Sensitive configs ---
-*/application.properties
-*/application.yml
+*.properties
+*.yml
 *.env
 
 ### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+*.apt_generated
+*.classpath
+*.factorypath
+*.project
+*.settings
+*.springBeans
+*.sts4-cache
 
 ### IntelliJ IDEA ###
 .idea
