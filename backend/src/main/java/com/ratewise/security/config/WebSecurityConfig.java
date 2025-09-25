@@ -43,7 +43,7 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
+        @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable()) 
@@ -84,6 +84,13 @@ public class WebSecurityConfig {
                     try {
                         String token = authHeader.substring(7);
                         
+                        if (!jwtUtil.isTokenActiveForUser(token)) {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\":\"Token is no longer active\"}");
+                            return;
+                        }
+
                         // Validate the token
                         jwtUtil.validateToken(token);
                         
@@ -132,7 +139,8 @@ public class WebSecurityConfig {
                 String path = request.getRequestURI();
 
                 // Skip JWT validation for public endpoints
-                return path.startsWith("/api/v1/auth/") ||
+                return path.equals("/api/v1/auth/login") ||
+                        path.equals("/api/v1/auth/register") ||
                         path.startsWith("/api/v1/health/") ||
                         path.startsWith("/db/") ||
                         path.equals("/");

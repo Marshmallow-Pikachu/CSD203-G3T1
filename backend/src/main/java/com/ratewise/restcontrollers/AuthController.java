@@ -82,24 +82,20 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         try {
-            // Check if user is authenticated using SecurityContext
-            if (!SecurityUtils.isAuthenticated()) {
-                return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(400).body(Map.of("error", "Invalid token format"));
             }
-            
-            // Get current user email from SecurityContext
-            String email = SecurityUtils.getCurrentUserEmail();
-            if (email == null) {
-                return ResponseEntity.status(401).body(Map.of("error", "Unable to get user information"));
-            }
-            
+
+            String token = authHeader.substring(7);
+            String email = jwtUtil.getEmail(token);
+            Long userId = jwtUtil.getUserId(token);
             // Get user details from service
             User user = authService.getCurrentUser(email);
             
             Map<String, Object> userInfo = new LinkedHashMap<>();
-            userInfo.put("userId", user.getId());
+            userInfo.put("userId", userId);
             userInfo.put("username", user.getUsername());
-            userInfo.put("email", user.getEmail());
+            userInfo.put("email", email);
             
             return ResponseEntity.status(200).body(userInfo);
         } catch (Exception e) {
@@ -113,7 +109,19 @@ public class AuthController {
      */
     @DeleteMapping("/logout")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
-        SecurityUtils.getCurrentAuthentication();
-        return ResponseEntity.status(200).body("Logged out successfully"); 
+        try {   
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(400).body("Invalid token format");
+            }
+
+            String token = authHeader.substring(7);
+            Long userId = jwtUtil.getUserId(token);
+            
+            // Invalidate the user's token
+            authService.logout(userId);
+            return ResponseEntity.status(200).body("Logged out successfully"); 
+        } catch(Exception e) {
+            return ResponseEntity.status(400).body("Invalid token");
+        }
     }
 }
