@@ -1,15 +1,11 @@
 import Query from "../components/Query"; 
-import Logout from "../components/Logout";
-// import { Sidebar } from "../components/Sidebar";
-// import Test from "../components/Test";
-// import Countries from "./Countries";
+import Table from "../components/Table";
 
 export default function Home() {
   return (
     <section>
+      <Table></Table>
     <Query country="US" />
-    <Logout/>
-    {/* <Test /> */}
     </section>
   );
 }
