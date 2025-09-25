@@ -8,10 +8,10 @@
 		<version>3.5.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.pricegrid</groupId>
-	<artifactId>pricegrid</artifactId>
+	<groupId>com.ratewise</groupId>
+	<artifactId>ratewise</artifactId>
 	<version>0.0.5-SNAPSHOT</version>
-	<name>PriceGrid</name>
+	<name>RateWise</name>
 	<description>Tariff rate dashboard and calculator</description>
 	<url/>
 	<licenses>
