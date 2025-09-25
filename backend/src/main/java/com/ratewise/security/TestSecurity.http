@@ -12,9 +12,9 @@ POST {{baseUrl}}/api/v1/auth/register
 Content-Type: application/json
 
 {
-  "username": "marc",
-  "email": "marclim12@example.com",
-  "password": "MLLk91990411"
+  "username": "notjeff",
+  "email": "jeff@example.com",
+  "password": "Abcd1234"
 }
 
 # === 2. LOGGING INTO AN ACCOUNT ===  
@@ -23,18 +23,18 @@ POST {{baseUrl}}/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "username": "marc",
-  "password": "MLLk91990411"
+  "username": "notjeff",
+  "password": "Abcd1234"
 }
 
 # === 3. VALIDATION OF TOKEN ===
 ### Validation of account token
 GET {{baseUrl}}/api/v1/auth/validate
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxMDk4NCwiZXhwIjoxNzU4ODk3Mzg0LCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.7AVAFF1RdBBl3i7ZX6Rd9_fQK1kc3_pYj73xlVioP1o
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNyIsImlhdCI6MTc1ODgxNjU4MSwiZXhwIjoxNzU4OTAyOTgxLCJlbWFpbCI6ImplZmZAZXhhbXBsZS5jb20ifQ.huuyciWLnyo36s6hrEgFbrO308H80Hbg9KItEBuJaQY
 
 ### Get current user information
 GET {{baseUrl}}/api/v1/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxMDk4NCwiZXhwIjoxNzU4ODk3Mzg0LCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.7AVAFF1RdBBl3i7ZX6Rd9_fQK1kc3_pYj73xlVioP1o
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNyIsImlhdCI6MTc1ODgxNjU4MSwiZXhwIjoxNzU4OTAyOTgxLCJlbWFpbCI6ImplZmZAZXhhbXBsZS5jb20ifQ.huuyciWLnyo36s6hrEgFbrO308H80Hbg9KItEBuJaQY
 
 # === 5. LOGGING OUT OF AN ACCOUNT ===
 ### Logout user (Delete mapping)
