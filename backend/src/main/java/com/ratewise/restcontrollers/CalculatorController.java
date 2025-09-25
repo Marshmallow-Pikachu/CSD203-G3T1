@@ -1,4 +1,3 @@
-
 package com.ratewise.restcontrollers;
 import com.ratewise.services.CalculatorService;
 import java.util.Map;
