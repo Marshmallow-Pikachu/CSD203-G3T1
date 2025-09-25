@@ -18,6 +18,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.UserRepository;
 import com.ratewise.security.User;
@@ -70,6 +75,26 @@ public class WebSecurityConfig {
                 .build();
     }
 
+    // Main CORS config used by Spring Security
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cfg = new CorsConfiguration();
+        // React dev server origin
+        cfg.setAllowedOrigins(List.of("http://localhost:5173"));
+        // Methods you need
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        // Headers your frontend will send
+        cfg.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
+        // Headers you want the browser to be able to read
+        cfg.setExposedHeaders(List.of("Authorization"));
+        // If you do NOT rely on cookies, set this to false and also set axios withCredentials=false
+        cfg.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cfg);
+        return source;
+    }
+
     @Bean
     public OncePerRequestFilter jwtAuthenticationFilter() {
         return new OncePerRequestFilter() {
@@ -77,20 +102,25 @@ public class WebSecurityConfig {
             protected void doFilterInternal(HttpServletRequest request,
                                             HttpServletResponse response,
                                             FilterChain filterChain) throws ServletException, IOException {
+                // ✅ Never authenticate preflight
+                if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 String authHeader = request.getHeader("Authorization");
 
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                     try {
                         String token = authHeader.substring(7);
-                        
+
                         // Validate the token
                         jwtUtil.validateToken(token);
-                        
+
                         // Extract user information from token
                         Long userId = jwtUtil.getUserId(token);
                         String email = jwtUtil.getEmail(token);
-                        
+
                         // Verify user exists and is active
                         Optional<User> userOpt = userRepository.findById(userId);
                         if (userOpt.isEmpty()) {
