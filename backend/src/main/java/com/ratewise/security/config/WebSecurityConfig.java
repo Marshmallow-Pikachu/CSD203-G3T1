@@ -4,11 +4,13 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -44,38 +46,35 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) 
-                .cors(cors -> cors.disable()) 
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // Public endpoints (no authentication required)
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/health/**").permitAll()
-                        .requestMatchers("/db/**").permitAll()
+            .csrf(csrf -> csrf.disable())
+            // ✅ Enable CORS and use our configurationSource bean
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // ✅ VERY IMPORTANT: allow preflight OPTIONS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Protected endpoints (authentication required)
-                        .requestMatchers("/api/v1/countries/**").authenticated()
-                        .requestMatchers("/api/v1/tariffs/**").authenticated()
-                        .requestMatchers("/api/**").authenticated()
+                // Public endpoints
+                .requestMatchers("/", "/api/v1/auth/**", "/api/v1/health/**", "/db/**").permitAll()
 
-                        // Require authentication for any other request
-                        .anyRequest().authenticated())
+                // Protected endpoints
+                .requestMatchers("/api/v1/countries/**").authenticated()
+                .requestMatchers("/api/v1/tariffs/**").authenticated()
+                .requestMatchers("/api/**").authenticated()
 
-                // Add JWT filter before the default authentication filter
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .build();
+                .anyRequest().authenticated()
+            )
+            // ✅ JWT filter
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+            .build();
     }
 
-    // Main CORS config used by Spring Security
+    // ✅ Central CORS config used by Spring Security
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
@@ -114,39 +113,24 @@ public class WebSecurityConfig {
                     try {
                         String token = authHeader.substring(7);
 
-                        // Validate the token
                         jwtUtil.validateToken(token);
 
-                        // Extract user information from token
                         Long userId = jwtUtil.getUserId(token);
                         String email = jwtUtil.getEmail(token);
 
-                        // Verify user exists and is active
                         Optional<User> userOpt = userRepository.findById(userId);
-                        if (userOpt.isEmpty()) {
-                            throw new RuntimeException("User not found");
-                        }
-                        
+                        if (userOpt.isEmpty()) throw new RuntimeException("User not found");
+
                         User user = userOpt.get();
-                        if (!user.isEnabled()) {
-                            throw new RuntimeException("User account is disabled");
-                        }
-                        
-                        // Create and set authentication
+                        if (!user.isEnabled()) throw new RuntimeException("User account is disabled");
+
                         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                            email,
-                            null,
-                            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            email, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
                         );
-                        
-                        // Set authentication in security context
                         SecurityContextHolder.getContext().setAuthentication(authentication);
 
                     } catch (Exception e) {
-                        // Clear any existing authentication
                         SecurityContextHolder.clearContext();
-                        
-                        // Token is invalid - set error response
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         response.setContentType("application/json");
                         response.getWriter().write("{\"error\":\"Invalid or expired token: " + e.getMessage() + "\"}");
@@ -158,14 +142,14 @@ public class WebSecurityConfig {
             }
 
             @Override
-            protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+            protected boolean shouldNotFilter(HttpServletRequest request) {
                 String path = request.getRequestURI();
-
-                // Skip JWT validation for public endpoints
-                return path.startsWith("/api/v1/auth/") ||
-                        path.startsWith("/api/v1/health/") ||
-                        path.startsWith("/db/") ||
-                        path.equals("/");
+                // ✅ Skip JWT for public endpoints
+                return "OPTIONS".equalsIgnoreCase(request.getMethod()) ||
+                       path.startsWith("/api/v1/auth/") ||
+                       path.startsWith("/api/v1/health/") ||
+                       path.startsWith("/db/") ||
+                       path.equals("/");
             }
         };
     }
