@@ -1,35 +1,37 @@
-import React, { type FunctionComponent } from "react";
-import { input } from "react-dom";
-import type { UseFormRegister } from "react-hook-form";
+import React from "react";
+import type { UseFormRegister, FieldValues, Path, RegisterOptions } from "react-hook-form";
 
-interface CalculateFields {
-  productDescription: string;
-  hsCode: string;
-  exporter: string;
-  importer: string;
-  agreement: string;
-  goods_value: number;
-  quantity: number;
-  freight: number;
-  insurance: string;
-  start_date: string;
-  end_date: string;
+type MyInputProps<TForm extends FieldValues> = {
+  label: string;
+  name: Path<TForm>;
+  type?: string;
+  register: UseFormRegister<TForm>;
+  options?: RegisterOptions<TForm, Path<TForm>>;
+  className?: string;
 };
 
-interface MyInputProps {
-    name: keyof CalculateFields;
-    label: string;
-    type: string;
-    register: UseFormRegister<CalculateFields>;
+export default function InputField<TForm extends FieldValues>({
+  label,
+  name,
+  type = "text",
+  register,
+  options,
+  className,
+}: MyInputProps<TForm>) {
+  return (
+    <div className={`space-y-1 ${className ?? ""}`}>
+      <label
+        htmlFor={name}
+        className="block text-sm font-semibold text-gray-700"
+      >
+        {label}
+      </label>
+      <input
+        id={name}
+        type={type}
+        {...register(name, options)}
+        className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+  );
 }
-
-const InputField : React.FC<MyInputProps> = ({name, label, type, register}) => {
-    return (
-        <div className="input-container">
-            <p className="input-label">{label}</p>
-            <input type={type} {...register(name)} />
-        </div>
-    )
-}
-
-export default InputField;
