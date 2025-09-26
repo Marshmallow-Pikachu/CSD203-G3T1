@@ -30,12 +30,11 @@ Content-Type: application/json
 # === 3. VALIDATION OF TOKEN ===
 ### Validation of account token
 GET {{baseUrl}}/api/v1/auth/validate
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNyIsImlhdCI6MTc1ODgxNjU4MSwiZXhwIjoxNzU4OTAyOTgxLCJlbWFpbCI6ImplZmZAZXhhbXBsZS5jb20ifQ.huuyciWLnyo36s6hrEgFbrO308H80Hbg9KItEBuJaQY
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
 
 ### Get current user information
 GET {{baseUrl}}/api/v1/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNyIsImlhdCI6MTc1ODgxNjU4MSwiZXhwIjoxNzU4OTAyOTgxLCJlbWFpbCI6ImplZmZAZXhhbXBsZS5jb20ifQ.huuyciWLnyo36s6hrEgFbrO308H80Hbg9KItEBuJaQY
-
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
 # === 5. LOGGING OUT OF AN ACCOUNT ===
 ### Logout user (Delete mapping)
 DELETE {{baseUrl}}/api/v1/auth/logout

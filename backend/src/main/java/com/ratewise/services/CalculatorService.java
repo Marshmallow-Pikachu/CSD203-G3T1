@@ -2,9 +2,16 @@ package com.ratewise.services;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.LocalDate;
+import java.sql.Date;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 
 /**
@@ -25,20 +32,52 @@ public class CalculatorService {
         this.jdbc = jdbc;
     }
 
+    private static double round2DP(double value) {
+        return BigDecimal.valueOf(value)
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue();
+    }
+
+    private static final DateTimeFormatter SG_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     /**
-     * Resolve a country input into a standard ISO country code.
-     * Accepts either full country names ("Singapore") or codes ("SG").
-     * Returns the code (e.g. "SG").
+     * Try to resolve a country to its ISO alpha-2 code.
+     * Returns the code (e.g., "SG") or null if not found/blank.
+     * Never throws for invalid input (lenient UX).
      */
-    private String resolveCountryCode(String input) {
-        String sql = """
+    private String resolveCountryCode(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return null; // lenient: let caller decide how to message this
+        }
+        String input = raw.trim();
+
+        final String byCodeSql = """
             SELECT country_code
             FROM countries
-            WHERE LOWER(country_name) = LOWER(?) OR UPPER(country_code) = UPPER(?)
+            WHERE UPPER(country_code) = UPPER(?)
             LIMIT 1
         """;
 
-        return jdbc.queryForObject(sql, String.class, input, input);
+        final String byNameSql = """
+            SELECT country_code
+            FROM countries
+            WHERE LOWER(country_name) = LOWER(?)
+            LIMIT 1
+        """;
+
+        try {
+            if (isIsoAlpha2(input)) {
+                return jdbc.queryForObject(byCodeSql, String.class, input);
+            } else {
+                return jdbc.queryForObject(byNameSql, String.class, input);
+            }
+        } catch (EmptyResultDataAccessException e) {
+            return null; // lenient: unknown country
+        }
+    }
+
+    private boolean isIsoAlpha2(String s) {
+        return s.length() == 2 && s.chars().allMatch(Character::isLetter);
     }
     
     /**
@@ -46,84 +85,101 @@ public class CalculatorService {
     * Returns: rate %, customs basis (CIF/FOB), tax type, tax rate %.
     * Called inside calculateLandedCost function later.
     */
-    private Map<String, Object> getTariffAndTax(String exporter, String importer, String hsCode, String agreement) {
+    private Map<String, Object> getTariffAndTax(String exporter, String importer, String hsCode, String agreement, LocalDate startDate, LocalDate endDate) {
+        // Overlap window we will bind to SQL
+        Date sqlStart = Date.valueOf(startDate);
+        Date sqlEnd   = Date.valueOf(endDate);
+
         String tariffSql = """
-            SELECT tariff_rates.rate_percent,
-                   importer_country.customs_basis,
-                   importer_country.id AS importer_id
-            FROM tariff_rates
+            SELECT tr.rate_percent,
+                  ic.customs_basis,
+                  ic.id AS importer_id
+            FROM tariff_rates tr
 
-            JOIN hs_codes
-              ON hs_codes.id = tariff_rates.hs_code_id
+            JOIN hs_codes hc    ON hc.id = tr.hs_code_id
+            JOIN countries ec   ON ec.id = tr.exporter_id
+            JOIN countries ic   ON ic.id = tr.importer_id
+            JOIN agreements ag  ON ag.id = tr.agreement_id
 
-            JOIN countries AS exporter_country
-              ON exporter_country.id = tariff_rates.exporter_id
+            WHERE ec.country_code = ?
+              AND ic.country_code = ?
+              AND hc.hs_code = ?
+              AND ag.agreement_code = ?
+              AND tr.valid_from <= ?
+              AND (tr.valid_to IS NULL OR tr.valid_to >= ?)
 
-            JOIN countries AS importer_country
-              ON importer_country.id = tariff_rates.importer_id
-
-            JOIN agreements
-              ON agreements.id = tariff_rates.agreement_id
-
-            WHERE exporter_country.country_code = ?
-              AND importer_country.country_code = ?
-              AND hs_codes.hs_code = ?
-              AND agreements.agreement_code = ?
-              AND (tariff_rates.valid_to IS NULL OR tariff_rates.valid_to >= CURRENT_DATE)
-
-            ORDER BY tariff_rates.valid_from DESC
+            ORDER BY tr.valid_from DESC
             LIMIT 1
         """;
 
-        // Query returns a map with column:value where column is the column name and value is the column value
-        Map<String, Object> tariffRow = jdbc.queryForMap(
-                tariffSql, exporter, importer, hsCode, agreement);
+        // Use query(...) so we can handle "no rows" cleanly
+        var tariffs = jdbc.queryForList(
+            tariffSql,
+            exporter, importer, hsCode, agreement,
+            sqlEnd,  // valid_from <= end
+            sqlStart // valid_to   >= start (or NULL)
+        );
 
-        // SQL to fetch current VAT/GST rate for importer country
+        if (tariffs.isEmpty()) {
+            throw new IllegalStateException(
+                "No tariff rate found for the given lane/HS/agreement within the date range " +
+                startDate + " to " + endDate + "."
+            );
+        }
+
+        Map<String, Object> tariffRow = tariffs.get(0);
+
         String taxSql = """
-            SELECT tax_rules.tax_type,
-                   tax_rules.rate_percent
-            FROM tax_rules
-            WHERE tax_rules.country_id = ?
-              AND (tax_rules.valid_to IS NULL OR tax_rules.valid_to >= CURRENT_DATE)
-            ORDER BY tax_rules.valid_from DESC
+            SELECT tr.tax_type,
+                  tr.rate_percent
+            FROM tax_rules tr
+
+            WHERE tr.country_id = ?
+              AND tr.valid_from <= ?
+              AND (tr.valid_to IS NULL OR tr.valid_to >= ?)
+
+            ORDER BY tr.valid_from DESC
             LIMIT 1
         """;
 
-        // Query returns a map with column:value where column is the column name and value is the column value
-        Map<String, Object> taxRow = jdbc.queryForMap(
-                taxSql, tariffRow.get("importer_id"));
+        var taxes = jdbc.queryForList(
+            taxSql,
+            tariffRow.get("importer_id"),
+            sqlEnd,
+            sqlStart
+        );
 
-        // Merge both tariff and tax info into a single result map        
+        if (taxes.isEmpty()) {
+            throw new IllegalStateException(
+                "No tax rule found for importer within the date range " +
+                startDate + " to " + endDate + "."
+            );
+        }
+
+        Map<String, Object> taxRow = taxes.get(0);
+
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("rate_percent", tariffRow.get("rate_percent"));
-        result.put("customs_basis", tariffRow.get("customs_basis"));
-        result.put("tax_type", taxRow.get("tax_type"));
-        result.put("tax_rate_percent", taxRow.get("rate_percent"));
+        result.put("rate_percent",       tariffRow.get("rate_percent"));
+        result.put("customs_basis",      tariffRow.get("customs_basis"));
+        result.put("tax_type",           taxRow.get("tax_type"));
+        result.put("tax_rate_percent",   taxRow.get("rate_percent"));
         return result;
     }
 
+
     /**
-     * Calculate landed cost.
-     * Request body is passed as a Map (from JSON).
-     * Steps:
-     * 1. Normalize inputs (countries, quantity)
-     * 2. Fetch tariff/tax info
-     * 3. Compute customs value (CIF vs FOB)
-     * 4. Compute duty and VAT/GST
-     * 5. Return full breakdown
-     *
-     * Example input:
-     * {
-     *   "exporter": "Singapore",
-     *   "importer": "United States",
-     *   "hsCode": "010121",
-     *   "agreement": "MFN",
-     *   "goods_value": 1000.0,
-     *   "quantity": 2,
-     *   "freight": 50.0,
-     *   "insurance": 100.0
-     * }
+    {
+      "exporter": "Singapore",
+      "importer": "United States",
+      "hsCode": "010121",
+      "agreement": "MFN",
+      "goods_value": 1000,
+      "quantity": 2,
+      "freight": 50,
+      "insurance": 100,
+      "start_date": "01/09/2025",
+      "end_date": "30/09/2025"
+    }
      */
     public Map<String, Object> calculateLandedCost(Map<String, Object> request) {
         // 1. Extract inputs from request body
@@ -137,15 +193,57 @@ public class CalculatorService {
         double insurance  = request.get("insurance") != null ? ((Number) request.get("insurance")).doubleValue() : 0.0;
         int quantity      = request.get("quantity")  != null ? ((Number) request.get("quantity")).intValue()    : 1;
 
+        //parsing date
+        LocalDate startDate = null;
+        LocalDate endDate   = null;
+        try {
+            if (request.get("start_date") != null) {
+                startDate = LocalDate.parse((String) request.get("start_date"), SG_DATE_FORMAT);
+            }
+            if (request.get("end_date") != null) {
+                endDate = LocalDate.parse((String) request.get("end_date"), SG_DATE_FORMAT);
+            }
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date format. Please use DD/MM/YYYY.", e);
+        }        
+
+        if (startDate == null && endDate == null) {
+            // Fully optional: if neither is sent, use 'today' for both.
+            startDate = LocalDate.now();
+            endDate   = startDate;
+        } else if (startDate == null) {
+            startDate = endDate;
+        } else if (endDate == null) {
+            endDate = startDate;
+        }        
+        // incase user swaps dates
+        if (startDate.isAfter(endDate)) {
+            LocalDate tmp = startDate;
+            startDate = endDate;
+            endDate   = tmp;
+        }        
+
         // 2. Resolve country names → ISO codes
         String exporter = resolveCountryCode(exporterInput);
         String importer = resolveCountryCode(importerInput);
+
+        if (exporter == null || importer == null) {
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("error", "Invalid country input.");
+            response.put("exporter_input", exporterInput);
+            response.put("importer_input", importerInput);
+            response.put("hint", "Use ISO alpha-2 (e.g., \"SG\") or the exact country name.");
+            // You can add a flag the frontend can check
+            response.put("ok", false);
+            return response; // keep UX smooth (no exception)
+        }
+     
 
         // 3. Adjust goods value by quantity
         double totalGoodsValue = goodsValue * quantity;
 
         // 4. Fetch duty rate, customs basis, and tax info
-        Map<String, Object> tariffInfo = getTariffAndTax(exporter, importer, hsCode, agreement);
+        Map<String, Object> tariffInfo = getTariffAndTax(exporter, importer, hsCode, agreement, startDate, endDate);
 
         double dutyRate     = ((Number) tariffInfo.get("rate_percent")).doubleValue();
         String customsBasis = (String) tariffInfo.get("customs_basis");
@@ -179,7 +277,7 @@ public class CalculatorService {
         response.put("tax_rate_percent", taxRate);
         response.put("tax", tax);
         response.put("quantity", quantity);
-        response.put("total_landed_cost", customsValue + duty + tax);
+        response.put("total_landed_cost", round2DP(customsValue + duty + tax));
         return response;
     }   
 
