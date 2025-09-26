@@ -93,3 +93,19 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhd
   "goods_value": 1200,
   "quantity": 2
 }
+
+### 6) No tariffs available for the time frame (expect 500 from service today)
+POST {{baseUrl}}/api/v1/calculate/landed-cost
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
+
+{
+  "exporter": "Singapore",
+  "importer": "United States",
+  "hsCode": "010121",
+  "agreement": "MFN",
+  "goods_value": 1000,
+  "quantity": 1,
+  "start_date": "01/01/1900",
+  "end_date":   "31/01/1900"
+}
