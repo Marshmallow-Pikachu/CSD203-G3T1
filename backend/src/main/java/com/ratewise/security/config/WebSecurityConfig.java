@@ -21,10 +21,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.UserRepository;
 import com.ratewise.security.User;
@@ -81,29 +77,8 @@ public class WebSecurityConfig {
 
                         // Require authentication for any other request
                         .anyRequest().authenticated())
-            // ✅ JWT filter
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .build();
-    }
-
-    // ✅ Central CORS config used by Spring Security
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration cfg = new CorsConfiguration();
-        // React dev server origin
-        cfg.setAllowedOrigins(List.of("http://localhost:5173"));
-        // Methods you need
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
-        // Headers your frontend will send
-        cfg.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
-        // Headers you want the browser to be able to read
-        cfg.setExposedHeaders(List.of("Authorization"));
-        // If you do NOT rely on cookies, set this to false and also set axios withCredentials=false
-        cfg.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
     }
 
     @Bean
@@ -113,7 +88,7 @@ public class WebSecurityConfig {
             protected void doFilterInternal(HttpServletRequest request,
                                             HttpServletResponse response,
                                             FilterChain filterChain) throws ServletException, IOException {
-                // ✅ Never authenticate preflight
+                // Never authenticate preflight
                 if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
                     filterChain.doFilter(request, response);
                     return;
@@ -149,7 +124,6 @@ public class WebSecurityConfig {
                         return;
                     }
                 }
-
                 filterChain.doFilter(request, response);
             }
 
