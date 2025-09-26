@@ -17,6 +17,18 @@ type CalculationResult = {
   hint?: string;
 } | null;
 
+// Transport-layer / interceptor-normalized error (object) OR legacy string
+type CalcTransportError =
+  | {
+      ok?: false;
+      status?: number | null;
+      message: string;
+      hint?: string | null;
+      raw?: any;
+    }
+  | string
+  | null;
+
 const formatUSD = (value?: number) =>
   typeof value === "number"
     ? value.toLocaleString("en-US", { style: "currency", currency: "USD" })
@@ -25,7 +37,6 @@ const formatUSD = (value?: number) =>
 const formatPercent = (value?: number) =>
   typeof value === "number" ? `${value}%` : "—";
 
-
 export default function CalculationResultPanel({
   calculationResult,
   isCalculating,
@@ -33,7 +44,7 @@ export default function CalculationResultPanel({
 }: {
   calculationResult: CalculationResult;
   isCalculating?: boolean;
-  calculationError?: string | null;
+  calculationError?: CalcTransportError;
 }) {
   const duty = calculationResult?.duty ?? 0;
   const tax = calculationResult?.tax ?? 0;
@@ -45,6 +56,34 @@ export default function CalculationResultPanel({
     typeof calculationResult?.total_landed_cost === "number"
       ? calculationResult.total_landed_cost
       : customsValue + duty + tax;
+
+  // Helper to render the transport error (string or object) with message + hint
+  const renderTransportError = (err: CalcTransportError) => {
+    if (!err) return null;
+
+    if (typeof err === "string") {
+      return (
+        <div className="rounded-lg border border-red-300 bg-red-50 text-red-700 p-3 mb-4">
+          {err}
+        </div>
+      );
+    }
+
+    // object shape with message + optional hint + optional status
+    return (
+      <div className="rounded-lg border border-red-300 bg-red-50 text-red-700 p-3 mb-4">
+        <p className="font-semibold">
+          {typeof err.status === "number" ? `Error ${err.status}` : "Error"}
+        </p>
+        <p className="text-sm mt-0.5">{err.message}</p>
+        {err.hint && (
+          <p className="text-xs mt-1 opacity-90">
+            <span className="font-semibold">Hint:</span> {err.hint}
+          </p>
+        )}
+      </div>
+    );
+  };
 
   return (
     <aside>
@@ -61,11 +100,7 @@ export default function CalculationResultPanel({
       )}
 
       {/* Transport / validation errors */}
-      {!isCalculating && calculationError && (
-        <div className="rounded-lg border border-red-300 bg-red-50 text-red-700 p-3 mb-4">
-          {calculationError}
-        </div>
-      )}
+      {!isCalculating && calculationError && renderTransportError(calculationError)}
 
       {!isCalculating && !calculationError && calculationResult?.ok === false && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 text-amber-800 p-3 mb-4">

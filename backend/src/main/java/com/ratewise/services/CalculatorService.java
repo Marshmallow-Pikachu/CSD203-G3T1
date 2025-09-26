@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.sql.Date;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,11 @@ public class CalculatorService {
     private record DateRange(LocalDate start, LocalDate end) {}
 
     /** Formatter for Singapore-style dates provided by the client, e.g. "01/09/2025". */
-    private static final DateTimeFormatter SG_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final List<DateTimeFormatter> DATE_FORMATTERS = List.of(
+        DateTimeFormatter.ISO_LOCAL_DATE,                 // 1990-03-11
+        DateTimeFormatter.ofPattern("dd/MM/uuuu"),        // 11/03/1990
+        DateTimeFormatter.ofPattern("d/M/uuuu")           // 1/3/1990
+    );
 
     public CalculatorService(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
@@ -151,8 +156,23 @@ public class CalculatorService {
         return resolveHsCodeFromDescription(productDescription);
     }
 
+
+    private static LocalDate parseFlexibleDate(Object value, String fieldName) {
+        if (value == null) return null;
+        final String s = value.toString().trim();
+        if (s.isEmpty()) return null;
+
+        for (DateTimeFormatter f : DATE_FORMATTERS) {
+            try {
+                return LocalDate.parse(s, f);
+            } catch (DateTimeParseException ignored) {}
+        }
+        throw new IllegalArgumentException(
+            "Invalid date format for '" + fieldName + "'. Accepted: YYYY-MM-DD or DD/MM/YYYY."
+        );
+    }    
     /**
-     * Parse "start_date" and "end_date" from the request (format: dd/MM/yyyy) and normalize them:
+     * Parse "start_date" and "endDate" from the request (format: dd/MM/yyyy) and normalize them:
      * - If both missing → use today for both.
      * - If one bound missing → use the other for both (single-day window).
      * - If start > end → swap them.
@@ -160,28 +180,35 @@ public class CalculatorService {
     */
     private DateRange parseDateRange(Map<String, Object> req) {
         LocalDate start = null, end = null;
+
         try {
-            if (req.get("start_date") != null)
-                start = LocalDate.parse((String) req.get("start_date"), SG_DATE_FORMAT);
-            if (req.get("end_date") != null)
-                end = LocalDate.parse((String) req.get("end_date"), SG_DATE_FORMAT);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Please use DD/MM/YYYY.", e);
+            start = parseFlexibleDate(req.get("startDate"), "startDate");
+            end   = parseFlexibleDate(req.get("endDate"), "endDate");
+        } catch (IllegalArgumentException ex) {
+            // Re-throw so your exception handler / caller can format {message, hint}
+            throw ex;
         }
 
-        if (start == null && end == null) { 
-            start = LocalDate.now(); 
-            end = start; 
+        // If both missing → today
+        if (start == null && end == null) {
+            start = LocalDate.now();
+            end = start;
+        } else if (start == null) {
+            // Only end provided → single-day window
+            start = end;
+        } else if (end == null) {
+            // Only start provided → single-day window
+            end = start;
         }
 
-        else if (start == null) start = end;
-        else if (end == null) end = start;
-
-        if (start.isAfter(end)) { 
-            LocalDate t = start; start = end; end = t; 
+        // Normalize order
+        if (start.isAfter(end)) {
+            LocalDate t = start; start = end; end = t;
         }
+
         return new DateRange(start, end);
     }
+
     
     /**
     * Fetch tariff % and tax info for a given trade lane and HS code, and time frame.
@@ -283,8 +310,8 @@ public class CalculatorService {
       "quantity": 2,
       "freight": 50,
       "insurance": 100,
-      "start_date": "01/09/2025",
-      "end_date": "30/09/2025"
+      "startDate": "01/09/2025",
+      "endDate": "30/09/2025"
     }
      */
     public Map<String, Object> calculateLandedCost(Map<String, Object> request) {

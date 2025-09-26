@@ -110,19 +110,34 @@ api.interceptors.response.use(
   (res) => res,
   (err: AxiosError) => {
     const cfg = err.config as (AxiosRequestConfig & { url?: string }) | undefined;
-    const status = err.response?.status;
-    const message =
-      (err.response?.data as any)?.message ||
-      (err.response?.data as any)?.error ||
-      err.message ||
-      "Request failed";
+    const status = err.response?.status ?? null;
+
+    // Default normalized error
+    const normalizedError = {
+      ok: false,
+      status,
+      message: "Unexpected error occurred.",
+      hint: null as string | null,
+      raw: err.response?.data || null,
+    };
+
+    if (err.response?.data) {
+      const data = err.response.data as any;
+      normalizedError.message =
+        data.message || data.error || normalizedError.message;
+      if (data.hint) normalizedError.hint = data.hint;
+    } else if (err.message) {
+      normalizedError.message = err.message;
+    }
 
     console.error("API error:", {
       url: cfg?.url,
-      status,
-      message,
+      status: normalizedError.status,
+      message: normalizedError.message,
+      hint: normalizedError.hint,
     });
 
-    return Promise.reject(new Error(message));
+    return Promise.reject(normalizedError);
   }
 );
+

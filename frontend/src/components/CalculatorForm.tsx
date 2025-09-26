@@ -28,7 +28,7 @@ interface CalculateFields {
 export interface CalculatorFormProps {
   onCalculating?: (payload: any) => void;
   onResult?: (data: any) => void;
-  onError?: (message?: string) => void;
+  onError?: (error: any) => void;
 }
 
 /**
@@ -78,7 +78,7 @@ export default function CalculatorForm({
  const mutation = useMutation({
     mutationFn: (body: any) => calculateLandedCost(body),
     onSuccess: (data) => onResult?.(data),
-    onError: (e: any) => onError?.(e?.message || "Request failed"),
+    onError: (err: any) => onError?.(err)
   });
 
    /**
