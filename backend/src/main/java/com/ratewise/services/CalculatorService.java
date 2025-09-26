@@ -15,35 +15,49 @@ import org.springframework.dao.EmptyResultDataAccessException;
 
 
 /**
- * calculatorservice
+ * # CalculatorService
  *
- * Contains business logic for tariff + tax calculations.
- * - Resolves country names → codes
- * - Fetches tariff & tax info
- * - Applies CIF/FOB rules
- * - Handles quantity, duty, tax, and total landed cost
+ * Business logic for tariff & tax calculations and landed-cost estimation.
+ *
+ * Responsibilities:
+ * - Resolve user inputs (country names/codes, HS code or product description).
+ * - Fetch tariff and tax rules valid for a given date range.
+ * - Apply CIF/FOB rules, compute customs value, duty, VAT/GST, and total landed cost.
  */
 
 @Service
 public class CalculatorService {
     private final JdbcTemplate jdbc;
+    private record DateRange(LocalDate start, LocalDate end) {}
+
+    /** Formatter for Singapore-style dates provided by the client, e.g. "01/09/2025". */
+    private static final DateTimeFormatter SG_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public CalculatorService(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
     }
 
+    // ------------------------
+    // Utility Helpers
+    // ------------------------
+    //Rounds a double to 2 decimal places using HALF_UP mode. Used mainly for monetary values (like the final returned landed cost)
     private static double round2DP(double value) {
         return BigDecimal.valueOf(value)
                         .setScale(2, RoundingMode.HALF_UP)
                         .doubleValue();
     }
 
-    private static final DateTimeFormatter SG_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
+    //returns true if the string looks like a valid 2-letter ISO alpha-2 code (e.g. "SG")
+    private boolean isIsoAlpha2(String s) {
+        return s.length() == 2 && s.chars().allMatch(Character::isLetter);
+    }
     /**
-     * Try to resolve a country to its ISO alpha-2 code.
-     * Returns the code (e.g., "SG") or null if not found/blank.
-     * Never throws for invalid input (lenient UX).
+     * Resolve a country input to its ISO alpha-2 code.
+     *
+     * Accepts either:
+     * - exact country code (e.g., "SG"), or
+     * - exact stored country name (case-insensitive).
+     *
      */
     private String resolveCountryCode(String raw) {
         if (raw == null || raw.trim().isEmpty()) {
@@ -76,12 +90,101 @@ public class CalculatorService {
         }
     }
 
-    private boolean isIsoAlpha2(String s) {
-        return s.length() == 2 && s.chars().allMatch(Character::isLetter);
+    /**
+     * Resolve an HS code from a product description using the {@code hs_codes} table.
+     *
+     * Strategy:
+     * - First try exact (case-insensitive) match on description.
+     * - Fallback to substring LIKE (case-insensitive), preferring the shortest description.
+     *
+     */
+    private String resolveHsCodeFromDescription(String desc) {
+        if (desc == null || desc.isBlank()) return null;
+
+        // exact (case-insensitive)
+        final String exactSql = """
+            SELECT hs_code
+            FROM hs_codes
+            WHERE LOWER(description) = LOWER(?)
+            LIMIT 1
+        """;
+
+        // substring (case-insensitive)
+        final String likeSql = """
+            SELECT hs_code
+            FROM hs_codes
+            WHERE LOWER(description) LIKE LOWER(?)
+            ORDER BY LENGTH(description) ASC
+            LIMIT 1
+        """;
+
+        try {
+            return jdbc.queryForObject(exactSql, String.class, desc.trim());
+        } catch (EmptyResultDataAccessException ignored) {
+            // fall through
+        }
+
+        try {
+            return jdbc.queryForObject(likeSql, String.class, "%" + desc.trim() + "%");
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }    
+
+    /**
+     * Resolve HS code from the request payload:
+     * - Prefer explicit {@code hsCode} field.
+     * - If missing, try mapping {@code productDescription} via {@link #resolveHsCodeFromDescription(String)}.
+     *
+     */
+    private String resolveHsCodeFromRequest(Map<String, Object> req) {
+        String hsCode = (String) req.get("hsCode");
+        if (hsCode != null && !hsCode.isBlank()) {
+            return hsCode;
+        }
+
+        String productDescription = (String) req.get("productDescription");
+        if (productDescription == null || productDescription.isBlank()) {
+            return null;
+        }
+        // Leverage your existing description→HS resolver
+        return resolveHsCodeFromDescription(productDescription);
+    }
+
+    /**
+     * Parse "start_date" and "end_date" from the request (format: dd/MM/yyyy) and normalize them:
+     * - If both missing → use today for both.
+     * - If one bound missing → use the other for both (single-day window).
+     * - If start > end → swap them.
+     *
+    */
+    private DateRange parseDateRange(Map<String, Object> req) {
+        LocalDate start = null, end = null;
+        try {
+            if (req.get("start_date") != null)
+                start = LocalDate.parse((String) req.get("start_date"), SG_DATE_FORMAT);
+            if (req.get("end_date") != null)
+                end = LocalDate.parse((String) req.get("end_date"), SG_DATE_FORMAT);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date format. Please use DD/MM/YYYY.", e);
+        }
+
+        if (start == null && end == null) { 
+            start = LocalDate.now(); 
+            end = start; 
+        }
+
+        else if (start == null) start = end;
+        else if (end == null) end = start;
+
+        if (start.isAfter(end)) { 
+            LocalDate t = start; start = end; end = t; 
+        }
+        return new DateRange(start, end);
     }
     
     /**
-    * Fetch tariff % and tax info for a given trade lane and HS code.
+    * Fetch tariff % and tax info for a given trade lane and HS code, and time frame.
     * Returns: rate %, customs basis (CIF/FOB), tax type, tax rate %.
     * Called inside calculateLandedCost function later.
     */
@@ -90,6 +193,7 @@ public class CalculatorService {
         Date sqlStart = Date.valueOf(startDate);
         Date sqlEnd   = Date.valueOf(endDate);
 
+        // Tariff: pick latest by valid_from that overlaps the requested window
         String tariffSql = """
             SELECT tr.rate_percent,
                   ic.customs_basis,
@@ -129,6 +233,7 @@ public class CalculatorService {
 
         Map<String, Object> tariffRow = tariffs.get(0);
 
+        // Tax: pick latest by valid_from that overlaps the requested window
         String taxSql = """
             SELECT tr.tax_type,
                   tr.rate_percent
@@ -168,6 +273,7 @@ public class CalculatorService {
 
 
     /**
+    Example Input
     {
       "exporter": "Singapore",
       "importer": "United States",
@@ -182,11 +288,21 @@ public class CalculatorService {
     }
      */
     public Map<String, Object> calculateLandedCost(Map<String, Object> request) {
+         Map<String,Object> response = new LinkedHashMap<>();
         // 1. Extract inputs from request body
         String exporterInput = (String) request.get("exporter");
         String importerInput = (String) request.get("importer");
-        String hsCode        = (String) request.get("hsCode");
         String agreement     = (String) request.get("agreement");
+
+        // Resolve HS code (prefer hsCode, else map from productDescription)
+        String hsCode = resolveHsCodeFromRequest(request);
+        if (hsCode == null || hsCode.isBlank()) {
+            response = new LinkedHashMap<>();
+            response.put("ok", false);
+            response.put("error", "Either hsCode or productDescription must be provided (no match found).");
+            response.put("productDescription", (String) request.get("productDescription"));
+            return response;
+        }
 
         double goodsValue = ((Number) request.get("goods_value")).doubleValue();
         double freight    = request.get("freight")   != null ? ((Number) request.get("freight")).doubleValue()   : 0.0;
@@ -194,41 +310,16 @@ public class CalculatorService {
         int quantity      = request.get("quantity")  != null ? ((Number) request.get("quantity")).intValue()    : 1;
 
         //parsing date
-        LocalDate startDate = null;
-        LocalDate endDate   = null;
-        try {
-            if (request.get("start_date") != null) {
-                startDate = LocalDate.parse((String) request.get("start_date"), SG_DATE_FORMAT);
-            }
-            if (request.get("end_date") != null) {
-                endDate = LocalDate.parse((String) request.get("end_date"), SG_DATE_FORMAT);
-            }
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Please use DD/MM/YYYY.", e);
-        }        
-
-        if (startDate == null && endDate == null) {
-            // Fully optional: if neither is sent, use 'today' for both.
-            startDate = LocalDate.now();
-            endDate   = startDate;
-        } else if (startDate == null) {
-            startDate = endDate;
-        } else if (endDate == null) {
-            endDate = startDate;
-        }        
-        // incase user swaps dates
-        if (startDate.isAfter(endDate)) {
-            LocalDate tmp = startDate;
-            startDate = endDate;
-            endDate   = tmp;
-        }        
+        DateRange range = parseDateRange(request);
+        LocalDate startDate = range.start();
+        LocalDate endDate   = range.end();
 
         // 2. Resolve country names → ISO codes
         String exporter = resolveCountryCode(exporterInput);
         String importer = resolveCountryCode(importerInput);
 
         if (exporter == null || importer == null) {
-            Map<String, Object> response = new LinkedHashMap<>();
+            response = new LinkedHashMap<>();
             response.put("error", "Invalid country input.");
             response.put("exporter_input", exporterInput);
             response.put("importer_input", importerInput);
@@ -262,7 +353,7 @@ public class CalculatorService {
         double tax = (customsValue + duty) * (taxRate / 100.0);
 
         // 8. Build response map (what will be returned as JSON)
-        Map<String, Object> response = new LinkedHashMap<>();
+        response = new LinkedHashMap<>();
         response.put("exporter_input", exporterInput);
         response.put("importer_input", importerInput);
         response.put("exporter_code", exporter);
