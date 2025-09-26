@@ -215,61 +215,61 @@ public class CalculatorService {
     * Returns: rate %, customs basis (CIF/FOB), tax type, tax rate %.
     * Called inside calculateLandedCost function later.
     */
-    private Map<String, Object> getTariffAndTax(String exporter, String importer, String hsCode, String agreement, LocalDate startDate, LocalDate endDate) {
-        // Overlap window we will bind to SQL
+    private Map<String, Object> getTariffAndTax(
+        String exporter, String importer, String hsCode, String agreement,
+        LocalDate startDate, LocalDate endDate
+    ) {
+        // Overlap window bound to SQL
         Date sqlStart = Date.valueOf(startDate);
         Date sqlEnd   = Date.valueOf(endDate);
 
-        // Tariff: pick latest by valid_from that overlaps the requested window
+        // Treat NULL valid_to as "valid through CURRENT_DATE" (not infinite)
         String tariffSql = """
             SELECT tr.rate_percent,
-                  ic.customs_basis,
-                  ic.id AS importer_id
+                ic.customs_basis,
+                ic.id AS importer_id
             FROM tariff_rates tr
 
-            JOIN hs_codes hc    ON hc.id = tr.hs_code_id
-            JOIN countries ec   ON ec.id = tr.exporter_id
-            JOIN countries ic   ON ic.id = tr.importer_id
-            JOIN agreements ag  ON ag.id = tr.agreement_id
+            JOIN hs_codes   hc ON hc.id = tr.hs_code_id
+            JOIN countries  ec ON ec.id = tr.exporter_id
+            JOIN countries  ic ON ic.id = tr.importer_id
+            JOIN agreements ag ON ag.id = tr.agreement_id
 
             WHERE ec.country_code = ?
-              AND ic.country_code = ?
-              AND hc.hs_code = ?
-              AND ag.agreement_code = ?
-              AND tr.valid_from <= ?
-              AND (tr.valid_to IS NULL OR tr.valid_to >= ?)
-
+            AND ic.country_code = ?
+            AND hc.hs_code = ?
+            AND ag.agreement_code = ?
+            AND tr.valid_from <= ?
+            AND COALESCE(tr.valid_to, CURRENT_DATE) >= ?
+            
             ORDER BY tr.valid_from DESC
             LIMIT 1
         """;
 
-        // Use query(...) so we can handle "no rows" cleanly
         var tariffs = jdbc.queryForList(
             tariffSql,
             exporter, importer, hsCode, agreement,
-            sqlEnd,  // valid_from <= end
-            sqlStart // valid_to   >= start (or NULL)
+            sqlEnd,   // valid_from <= end
+            sqlStart  // coalesced valid_to >= start
         );
 
         if (tariffs.isEmpty()) {
             throw new IllegalStateException(
-                "No tariff rate found for the given lane/HS/agreement within the date range " +
-                startDate + " to " + endDate + "."
+                "No tariff rate found for the given lane/HS/agreement within the requested date range. " +
+                "Note: open-ended rates are only considered valid through today."
             );
         }
 
         Map<String, Object> tariffRow = tariffs.get(0);
 
-        // Tax: pick latest by valid_from that overlaps the requested window
+        // Same treatment for tax rules
         String taxSql = """
             SELECT tr.tax_type,
-                  tr.rate_percent
+                tr.rate_percent
             FROM tax_rules tr
-
             WHERE tr.country_id = ?
-              AND tr.valid_from <= ?
-              AND (tr.valid_to IS NULL OR tr.valid_to >= ?)
-
+            AND tr.valid_from <= ?
+            AND COALESCE(tr.valid_to, CURRENT_DATE) >= ?
             ORDER BY tr.valid_from DESC
             LIMIT 1
         """;
@@ -283,20 +283,21 @@ public class CalculatorService {
 
         if (taxes.isEmpty()) {
             throw new IllegalStateException(
-                "No tax rule found for importer within the date range " +
-                startDate + " to " + endDate + "."
+                "No tax rule found for importer within the requested date range. " +
+                "Note: open-ended rules are only considered valid through today."
             );
         }
 
         Map<String, Object> taxRow = taxes.get(0);
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("rate_percent",       tariffRow.get("rate_percent"));
-        result.put("customs_basis",      tariffRow.get("customs_basis"));
-        result.put("tax_type",           taxRow.get("tax_type"));
-        result.put("tax_rate_percent",   taxRow.get("rate_percent"));
+        result.put("rate_percent",     tariffRow.get("rate_percent"));
+        result.put("customs_basis",    tariffRow.get("customs_basis"));
+        result.put("tax_type",         taxRow.get("tax_type"));
+        result.put("tax_rate_percent", taxRow.get("rate_percent"));
         return result;
     }
+
 
 
     /**
