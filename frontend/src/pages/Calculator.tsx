@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import CalculatorForm from "../components/CalculatorForm";
 import CalculationResultPanel from "../components/CalculationResultPanel";
 

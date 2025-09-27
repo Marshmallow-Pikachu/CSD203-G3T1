@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import InputField from "./InputField";
@@ -64,9 +63,6 @@ export default function CalculatorForm({
       endDate: "",
     },
   });
-
-  // Local state to display the backend's response
-  const [result, setResult] = useState<any>(null);
 
   /**
  * React Query Mutation

@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.ratewise</groupId>
 	<artifactId>ratewise</artifactId>
-	<version>0.0.5-SNAPSHOT</version>
+	<version>0.1.7-SNAPSHOT</version>
 	<name>RateWise</name>
 	<description>Tariff rate dashboard and calculator</description>
 	<url/>

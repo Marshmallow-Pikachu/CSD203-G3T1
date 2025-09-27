@@ -7,7 +7,6 @@ import {
   Calculator,
   Table,
   User,
-  LogIn,
   LogOut,
 } from "lucide-react";
 
@@ -24,8 +23,27 @@ function classNames(...parts: Array<string | false | null | undefined>) {
 export default function Sidebar() {
   const [collapsed, setCollapsed] = React.useState(false); // desktop collapse
   const [mobileOpen, setMobileOpen] = React.useState(false); // mobile drawer
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(() => {
+    // derive from token so we don't render auth-only UI without a token
+    return !!localStorage.getItem("accessToken");
+  });
+
   const location = useLocation();
+
+  // Hide the sidebar entirely on the login page
+  const onLoginPage = location.pathname.startsWith("/login");
+  if (onLoginPage) return null;
+
+  // Keep isAuthenticated in sync if other tabs log in/out
+  React.useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "accessToken") {
+        setIsAuthenticated(!!localStorage.getItem("accessToken"));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   // Persist desktop collapse across reloads
   React.useEffect(() => {
@@ -42,6 +60,16 @@ export default function Sidebar() {
   }, [location.pathname]);
 
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem("accessToken");
+      setIsAuthenticated(false);
+    } finally {
+      // hard redirect to avoid stale auth state
+      window.location.href = "/login";
+    }
+  };
 
   const SidebarInner = (
     <div
@@ -112,49 +140,36 @@ export default function Sidebar() {
 
       {/* Footer / Auth */}
       <div className="border-t border-gray-200 p-2">
-        {isAuthenticated ? (
-          <button
-            onClick={() => setIsAuthenticated(false)}
-            className={classNames(
-              "flex w-full items-center rounded-xl text-sm font-medium transition-colors",
-              collapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
-              "border border-gray-300 hover:bg-gray-100"
-            )}
-            title="Logout"
-            aria-label="Logout"
-          >
-            <LogOut className="h-5 w-5" />
-            {!collapsed && <span>Logout</span>}
-          </button>
-        ) : (
-          <button
-            onClick={() => (window.location.href = "/login")}
-            className={classNames(
-              "flex w-full items-center rounded-xl text-sm font-medium transition-opacity",
-              collapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
-              "bg-gray-900 text-white hover:opacity-90"
-            )}
-            title="Login"
-            aria-label="Login"
-          >
-            <LogIn className="h-5 w-5" />
-            {!collapsed && <span>Login</span>}
-          </button>
-        )}
         {isAuthenticated && (
-          <button
-            onClick={() => (window.location.href = "/profile")}
-            className={classNames(
-              "mt-2 flex w-full items-center rounded-xl text-sm font-medium transition-colors",
-              collapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
-              "border border-gray-300 hover:bg-gray-100"
-            )}
-            title="Profile"
-            aria-label="Profile"
-          >
-            <User className="h-5 w-5" />
-            {!collapsed && <span>Profile</span>}
-          </button>
+          <>
+            <button
+              onClick={handleLogout}
+              className={classNames(
+                "flex w-full items-center rounded-xl text-sm font-medium transition-colors",
+                collapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
+                "border border-gray-300 hover:bg-gray-100"
+              )}
+              title="Logout"
+              aria-label="Logout"
+            >
+              <LogOut className="h-5 w-5" />
+              {!collapsed && <span>Logout</span>}
+            </button>
+
+            <button
+              onClick={() => (window.location.href = "/profile")}
+              className={classNames(
+                "mt-2 flex w-full items-center rounded-xl text-sm font-medium transition-colors",
+                collapsed ? "justify-center p-2" : "gap-3 px-3 py-2",
+                "border border-gray-300 hover:bg-gray-100"
+              )}
+              title="Profile"
+              aria-label="Profile"
+            >
+              <User className="h-5 w-5" />
+              {!collapsed && <span>Profile</span>}
+            </button>
+          </>
         )}
       </div>
     </div>

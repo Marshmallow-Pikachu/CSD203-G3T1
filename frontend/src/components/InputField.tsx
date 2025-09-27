@@ -1,4 +1,3 @@
-import React from "react";
 import type { UseFormRegister, FieldValues, Path, RegisterOptions } from "react-hook-form";
 
 type MyInputProps<TForm extends FieldValues> = {

@@ -52,36 +52,28 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) 
-                .cors(Customizer.withDefaults()) 
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // for swagger UI
-                        .requestMatchers(
-                            "/v3/api-docs/**",
-                            "/swagger-ui/**",
-                            "/swagger-ui.html"
-                        ).permitAll()                
-                        // Public endpoints (no authentication required)
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/auth/register").permitAll()
-                        .requestMatchers("/api/v1/auth/login").permitAll()
-                        .requestMatchers("/api/v1/health/**").permitAll()
-                        .requestMatchers("/db/**").permitAll()
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // Swagger / OpenAPI (optional)
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // Protected endpoints (authentication required)
-                        .requestMatchers("/api/v1/auth/validate").authenticated()
-                        .requestMatchers("/api/v1/auth/logout").authenticated()
-                        .requestMatchers("/api/v1/auth/me").authenticated()
-                        .requestMatchers("/api/v1/countries/**").authenticated()
-                        .requestMatchers("/api/v1/tariffs/**").authenticated()
-                        .requestMatchers("/api/**").authenticated()
+                // Static assets & SPA entry points
+                .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
 
-                        // Require authentication for any other request
-                        .anyRequest().authenticated())
+                // Public endpoints
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/health/**").permitAll()
+                .requestMatchers("/db/**").permitAll()
+
+                // Protect API only
+                .requestMatchers("/api/**").authenticated()
+
+                // Everything else (SPA routes like /home, /tariffs) — let Spring serve index.html
+                .anyRequest().permitAll()
+            )
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .build();
     }
@@ -134,42 +126,26 @@ public class WebSecurityConfig {
 
             @Override
             protected boolean shouldNotFilter(HttpServletRequest request) {
+                // Only run JWT auth for API paths; skip everything else (static, SPA, swagger, etc.)
                 String path = request.getRequestURI();
-
-                // Skip JWT validation for SwaggerUI
-                if (path.startsWith("/v3/api-docs/") ||
-                    path.startsWith("/swagger-ui/") ||
-                    path.equals("/swagger-ui.html")) {
-                    return true;
-                }
-
-                // Skip JWT validation for public endpoints
-                return path.startsWith("/api/v1/auth/") ||
-                        path.startsWith("/api/v1/health/") ||
-                        path.startsWith("/db/") ||
-                        path.equals("/");
+                return !path.startsWith("/api/") || path.startsWith("/api/v1/auth/");
             }
         };
     }
-    //CORS configuration
+
+    // CORS configuration (might not even be needed since we are using same app service to run both frontend and back end so its the same origin
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allowed origins: dev + (later) your Azure frontend
         config.setAllowedOrigins(List.of(
             "http://localhost:5173"
-            // ,"https://<your-frontend>.azurewebsites.net"
+            // Add more only if you host the frontend separately
+            // "https://<your-frontend>.azurestaticapps.net"
         ));
-        // If you need wildcard subdomains later, use:
-        // config.setAllowedOriginPatterns(List.of("https://*.yourdomain.com"));
-
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
         config.setAllowedHeaders(List.of("Authorization","Content-Type"));
-        config.setAllowCredentials(true); // needed if you send cookies; fine with JWT in header too
-
-        // Optional: expose headers your frontend needs to read
-        // config.setExposedHeaders(List.of("Location"));
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

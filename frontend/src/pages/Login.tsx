@@ -12,10 +12,11 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await api.post("/api/v1/auth/login", {
-        username,
-        password,
-      });
+      const res = await api.post(
+        "/api/v1/auth/login",
+        { username, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
       const token = res.data.accessToken;
       localStorage.setItem("accessToken", token);

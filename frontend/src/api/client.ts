@@ -30,13 +30,13 @@ export const parseJwt = (token?: string) => {
 /* ===========================
    Base URL (env-first)
    =========================== */
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+//const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 /* ===========================
    Axios instance
    =========================== */
 export const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: "/",
   withCredentials: true, // send cookies if your backend uses them (e.g., refresh token)
   timeout: 10000,
   headers: {

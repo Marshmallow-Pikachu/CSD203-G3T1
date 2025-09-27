@@ -1,5 +1,3 @@
-import React from "react";
-
 type CalculationResult = {
   duty?: number;
   tax?: number;
