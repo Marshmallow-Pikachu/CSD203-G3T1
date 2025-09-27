@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
-import { RateBadge, Badge, Row} from "./Blocks";
+import { RateBadge, Badge, Row } from "./Blocks";
+import { useNavigate } from "react-router-dom";
 
 type Tariff = {
   hs_code: string;
@@ -15,21 +16,32 @@ type Tariff = {
   customs_basis: string;
 };
 
-type QueryProps = {
-  country: string;
-};
+export default function Query() {
+  const navigate = useNavigate();
 
-export default function Query({ country }:QueryProps) {
   const { data, isLoading, error } = useQuery<Tariff[]>({
-    queryKey: ["tariffs", country],
+    queryKey: ["tariffs", "US"],
     queryFn: async () => {
-      const res = await api.get(`/api/v1/tariffs/list?importer=US`);
-      return res.data;
+      const res = await api.get("/api/v1/tariffs/list", {
+        params: { importer: "US" },
+      });
+      return res.data as Tariff[];
     },
+    staleTime: 30_000,
+    retry: 1,
   });
 
-  if (isLoading) return <div className="p-6 text-center text-slate-500">Loading…</div>;
-  if (error) return <div className="p-6 text-center text-red-600">Failed to load.</div>;
+  if (isLoading) {
+    return <div className="p-6 text-center text-slate-500">Loading…</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-600">
+        Failed to load.
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50">
@@ -37,18 +49,20 @@ export default function Query({ country }:QueryProps) {
         <header className="mb-8 text-center space-y-2">
           <h1 className="text-2xl font-semibold text-slate-800">Tariff List</h1>
           <p className="text-sm text-slate-500">
-            Importer: <span className="font-medium">{country}</span> 
+            Importer: <span className="font-medium">US</span>
           </p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {data?.map((item) => (
-            <article key={item.hs_code}
-              className="rounded-xl border border-slate-200 bg-white p-5 shadow-2sm hover:shadow-md transition"
-              onClick={() => window.location.href = "/" +item.hs_code}>
+            <article
+              key={`${item.hs_code}-${item.agreement_code}`}
+              className="rounded-xl border border-slate-200 bg-white p-5 shadow-2sm hover:shadow-md transition cursor-pointer"
+              onClick={() => navigate(`/hs/${item.hs_code}`)}
+            >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-slate-500 font-medium">
-                HS: <span className="font-mono pr-4">{item.hs_code}</span>
+                  HS: <span className="font-mono pr-4">{item.hs_code}</span>
                 </span>
                 <div className="flex items-center gap-2">
                   <Badge>

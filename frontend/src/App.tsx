@@ -1,27 +1,40 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Calculator from './pages/Calculator';
-import Navbar from './components/Navbar';
-
+// src/App.tsx
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import AppLayout from "./components/layouts/AppLayout";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Calculator from "./pages/Calculator";
+import Tariffs from "./pages/Tariffs"; 
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem("accessToken");
-  return token ? children : <Navigate to="/login" replace />;
+  return token ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-      {/* Public route */}
-      <Route path="/login" element={<Login />} />
+        {/* Login as the entry point */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-      {/* Protected routes */}
-        <Route path="/" element={<PrivateRoute><Navbar /><Home /></PrivateRoute>} />
-        <Route path="/calculator" element={<PrivateRoute><Navbar /><Calculator /></PrivateRoute>} />
+        {/* Protected routes */}
+        <Route
+          element={
+            <PrivateRoute>
+              <AppLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route path="/home" element={<Home />} />
+          <Route path="/calculator" element={<Calculator />} />
+          <Route path="/tariffs" element={<Tariffs />} />
+        </Route>
+
+        {/* Catch-all → redirect to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
-    
   );
 }

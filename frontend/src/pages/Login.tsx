@@ -21,7 +21,7 @@ export default function Login() {
       localStorage.setItem("accessToken", token);
 
       console.log("JWT Token:", token);
-      navigate("/");
+      navigate("/home");
     } catch (error: any) {
       console.error("Login failed", error.response?.data || error.message);
       alert("Login failed");
