@@ -57,9 +57,9 @@ export default function Query() {
           {data?.map((item) => (
             <article
               key={`${item.hs_code}-${item.agreement_code}`}
-              className="rounded-xl border border-slate-200 bg-white p-5 shadow-2sm hover:shadow-md transition cursor-pointer"
-              onClick={() => navigate(`/hs/${item.hs_code}`)}
-            >
+              className="rounded-xl border border-slate-200 bg-white p-5 shadow-2sm hover:shadow-md transition cursor-pointer">
+                {/* To redirect to item page */}
+                {/* onClick={() => navigate(`/hs/${item.hs_code}`)} */}
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-slate-500 font-medium">
                   HS: <span className="font-mono pr-4">{item.hs_code}</span>
