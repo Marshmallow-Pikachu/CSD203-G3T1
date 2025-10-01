@@ -1,4 +1,4 @@
-package com.ratewise.controllers;
+package com.ratewise.restcontrollers;
 
 import com.ratewise.dto.LandedCostRequest;
 import com.ratewise.dto.LandedCostResponse;

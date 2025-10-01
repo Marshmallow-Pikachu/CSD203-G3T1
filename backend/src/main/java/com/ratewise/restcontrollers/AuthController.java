@@ -1,11 +1,20 @@
 package com.ratewise.restcontrollers;
 
 import com.ratewise.services.AuthService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.User;
 import com.ratewise.security.dto.LoginRequest;
 import com.ratewise.security.dto.LoginResponse;
 import com.ratewise.security.dto.RegisterRequest;
+import com.ratewise.security.dto.RegisterResponse;
+
 import com.ratewise.security.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +39,16 @@ public class AuthController {
      * POST /api/v1/auth/register
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody @Validated RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@RequestBody @Validated RegisterRequest request) {
         try {
             authService.register(request);
-            return ResponseEntity.status(201).body("User registered successfully");
+            return ResponseEntity
+                .status(201)
+                .body(new RegisterResponse(true, "User registered successfully"));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
+            return ResponseEntity
+                .status(400)
+                .body(new RegisterResponse(false, e.getMessage()));
         }
     }
 
@@ -44,15 +57,16 @@ public class AuthController {
      * POST /api/v1/auth/login
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Validated LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody @Validated LoginRequest request) {
         try {
-            LoginResponse response = authService.login(request);
-            return ResponseEntity.status(200).body(response);
+            String token = authService.login(request).getAccessToken(); // authService returns token
+            return ResponseEntity
+                    .status(200)
+                    .body(new LoginResponse(true, "Login successful", token));
         } catch (RuntimeException e) {
-            // Return the specific error message instead of empty token
-            Map<String, String> errorResponse = new LinkedHashMap<>();
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.status(401).body(errorResponse);
+            return ResponseEntity
+                    .status(401)
+                    .body(new LoginResponse(false, e.getMessage(), null));
         }
     }
 
