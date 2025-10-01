@@ -1,5 +1,7 @@
 package com.ratewise.restcontrollers;
 
+import com.ratewise.dto.TariffListItem;
+
 import com.ratewise.dto.TariffLookupResponse;
 import com.ratewise.services.TariffService;
 
@@ -51,10 +53,29 @@ public class TariffController {
 
     // Tariff dashboard listing
     @GetMapping("/list")
-    public List<Map<String, Object>> listTariffs(
+    public ResponseEntity<List<TariffListItem>> listTariffs(
             @RequestParam(required = false) String importer,
             @RequestParam(required = false) String exporter,
             @RequestParam(required = false) String agreement) {
-        return tariffService.listTariffs(importer, exporter, agreement);
+
+        List<Map<String,Object>> rows = tariffService.listTariffs(importer, exporter, agreement);
+
+        List<TariffListItem> dtos = rows.stream().map(row -> new TariffListItem(
+            (String) row.get("hs_code"),
+            (String) row.get("hs_description"),
+            (String) row.get("exporter_code"),
+            (String) row.get("exporter_name"),
+            (String) row.get("importer_code"),
+            (String) row.get("importer_name"),
+            (String) row.get("agreement_code"),
+            (String) row.get("agreement_name"),
+            toDouble(row.get("rate_percent")),
+            (String) row.get("customs_basis")
+        )).toList();
+
+        return ResponseEntity.ok(dtos);
+    }
+    private static Double toDouble(Object o) {
+        return o == null ? null : ((Number)o).doubleValue();
     }
 }
