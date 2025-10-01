@@ -31,10 +31,11 @@ public class TariffController {
     public ResponseEntity<TariffLookupResponse> lookup(
             @RequestParam String exporter,
             @RequestParam String importer,
-            @RequestParam String hsCode,
+            @RequestParam String hsCode, 
             @RequestParam String agreement) {
         Map<String, Object> result = tariffService.getTariffInfo(exporter, importer, hsCode, agreement);
-
+        
+        System.out.println(result);
         TariffLookupResponse response = new TariffLookupResponse(
             (boolean) result.get("ok"),
             (String) result.get("hs_code"),
@@ -45,7 +46,7 @@ public class TariffController {
             (String) result.get("importer_name"),
             (String) result.get("agreement_code"),
             (String) result.get("agreement_name"),
-            (Double) result.get("rate_percent"),
+            (Number) result.get("rate_percent"),
             (String) result.get("customs_basis")
         );
         return ResponseEntity.ok(response);

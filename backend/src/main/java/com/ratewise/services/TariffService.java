@@ -84,8 +84,11 @@ public class TariffService {
             ORDER BY tariff_rates.valid_from DESC
             LIMIT 1
         """;
+        Map<String, Object> response = jdbc.queryForMap(sql, exporter, importer, hsCode, agreement);
+        
+        response.put("ok", true);
 
-        return jdbc.queryForMap(sql, exporter, importer, hsCode, agreement);
+        return response;
     }
     /**
      * Optional filters: importer, exporter, agreement.
@@ -138,7 +141,6 @@ public class TariffService {
         }
 
         sql.append(" ORDER BY hs_codes.hs_code ASC, agreements.agreement_code ASC");
-
         return jdbc.queryForList(sql.toString(), params.toArray());
     }
 } 
