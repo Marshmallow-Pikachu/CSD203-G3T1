@@ -17,7 +17,7 @@ fi
 
 # 2) Rebuild quickly and run (skip tests for speed)
 echo "Starting Spring Boot on port $PORT..."
-mvn spring-boot:run
+./mvnw spring-boot:run
 
 
 
