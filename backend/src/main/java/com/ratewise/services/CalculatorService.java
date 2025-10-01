@@ -1,5 +1,7 @@
 package com.ratewise.services;
 
+import com.ratewise.exceptions.ApiValidationException;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.time.format.DateTimeFormatter;
@@ -9,6 +11,7 @@ import java.sql.Date;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -51,6 +54,23 @@ public class CalculatorService {
                         .setScale(2, RoundingMode.HALF_UP)
                         .doubleValue();
     }
+
+    private static boolean isBlank(Object v) {
+        return v == null || (v instanceof String s && s.trim().isEmpty());
+    }   
+
+    private static double asDouble(Object v, String field) {
+        if (v == null) return 0.0;
+        if (v instanceof Number n) return n.doubleValue();
+        try { return Double.parseDouble(v.toString().trim()); }
+        catch (Exception e) { throw new IllegalArgumentException("Field '" + field + "' must be a number."); }
+    }
+    private static int asInt(Object v, String field) {
+        if (v == null) return 0;
+        if (v instanceof Number n) return n.intValue();
+        try { return Integer.parseInt(v.toString().trim()); }
+        catch (Exception e) { throw new IllegalArgumentException("Field '" + field + "' must be an integer."); }
+    }    
 
     // Normalizes codes by trimming and converting to uppercase. This includes ISO/country code (e.g. SG) and Agreement codes (e.g. MFN)
     private static String normalizeCodeInput(String rawInput) {
@@ -231,7 +251,59 @@ public class CalculatorService {
         return new DateRange(start, end);
     }
 
-    
+    private void preValidate(Map<String, Object> req) {
+        List<String> errors = new ArrayList<>();
+
+        // 0) Untouched form → "No inputs detected" (ignore 'agreement' which defaults to "MFN")
+        boolean noMeaningfulText =
+            isBlank(req.get("exporter")) &&
+            isBlank(req.get("importer")) &&
+            isBlank(req.get("hsCode")) &&
+            isBlank(req.get("productDescription")) &&
+            isBlank(req.get("startDate")) &&
+            isBlank(req.get("endDate"));
+
+        Double gv = null, fr = null, ins = null;
+        Integer qty = null;
+
+        // Parse numbers but collect parsing errors instead of throwing immediately
+        try { gv  = req.get("goods_value") == null || isBlank(req.get("goods_value")) ? null : asDouble(req.get("goods_value"), "goods_value"); }
+        catch (IllegalArgumentException e) { errors.add(e.getMessage()); }
+        try { fr  = isBlank(req.get("freight"))   ? null : asDouble(req.get("freight"), "freight"); }
+        catch (IllegalArgumentException e) { errors.add(e.getMessage()); }
+        try { ins = isBlank(req.get("insurance")) ? null : asDouble(req.get("insurance"), "insurance"); }
+        catch (IllegalArgumentException e) { errors.add(e.getMessage()); }
+        try { qty = isBlank(req.get("quantity"))  ? null : asInt(req.get("quantity"), "quantity"); }
+        catch (IllegalArgumentException e) { errors.add(e.getMessage()); }
+
+        boolean noMeaningfulNumbers =
+            (gv == null || gv == 0.0) &&
+            (fr == null || fr == 0.0) &&
+            (ins == null || ins == 0.0) &&
+            (qty == null || qty == 0 || qty == 1);
+
+        if ((req == null || req.isEmpty()) || (noMeaningfulText && noMeaningfulNumbers)) {
+            errors.add("No inputs detected.");
+        }
+
+        // 1) Presence rules (ORDERED → deterministic)
+        if (isBlank(req.get("exporter"))) errors.add("exporter is required.");
+        if (isBlank(req.get("importer"))) errors.add("importer is required.");
+        if (isBlank(req.get("agreement"))) errors.add("agreement is required (e.g., MFN, CPTPP).");
+        if (isBlank(req.get("hsCode")) && isBlank(req.get("productDescription"))) {
+            errors.add("Either hsCode or productDescription must be provided.");
+        }
+        if (gv == null) errors.add("goods_value is required.");
+
+        // 2) Sign checks (only if parsed)
+        if (gv != null && gv < 0)   errors.add("goods_value must not be negative.");
+        if (fr != null && fr < 0)   errors.add("freight must not be negative.");
+        if (ins != null && ins < 0) errors.add("insurance must not be negative.");
+        if (qty != null && qty < 0) errors.add("quantity must not be negative.");
+
+        if (!errors.isEmpty()) throw new ApiValidationException(errors);
+    }    
+
     /**
     * Fetch tariff % and tax info for a given trade lane and HS code, and time frame.
     * Returns: rate %, customs basis (CIF/FOB), tax type, tax rate %.
@@ -338,7 +410,27 @@ public class CalculatorService {
     }
      */
     public Map<String, Object> calculateLandedCost(Map<String, Object> request) {
-        Map<String,Object> response;
+        preValidate(request);
+        
+        // Optional: treat all-empty strings & zeros as no input
+        boolean noMeaningfulText =
+            isBlank(request.get("exporter")) &&
+            isBlank(request.get("importer")) &&
+            isBlank(request.get("hsCode")) &&
+            isBlank(request.get("productDescription")) &&
+            isBlank(request.get("startDate")) &&
+            isBlank(request.get("endDate"));
+
+        double gv  = asDouble(request.get("goods_value"), "goods_value");
+        double fr  = asDouble(request.get("freight"), "freight");
+        double ins = asDouble(request.get("insurance"), "insurance");
+        int qty    = request.get("quantity") == null ? 0 : asInt(request.get("quantity"), "quantity");
+
+        boolean noMeaningfulNumbers = gv == 0.0 && fr == 0.0 && ins == 0.0 && (qty == 0 || qty == 1);
+
+        if (noMeaningfulText && noMeaningfulNumbers) {
+            throw new IllegalArgumentException("No inputs detected.");
+        }
 
         // 1) Inputs (normalize agreement up-front)
         String exporterCountryInput = (String) request.get("exporter");
@@ -346,84 +438,62 @@ public class CalculatorService {
 
         String tradeAgreementInput  = normalizeCodeInput((String) request.get("agreement"));
         if (tradeAgreementInput == null || tradeAgreementInput.isBlank()) {
-            Map<String,Object> errorResponse = new LinkedHashMap<>();
-            errorResponse.put("ok", false);
-            errorResponse.put("error", "agreement is required (e.g., MFN, CPTPP).");
-            return errorResponse;
+            throw new IllegalArgumentException("agreement is required (e.g., MFN, CPTPP).");
         }
 
-        // Resolve HS (prefers hsCode, else productDescription) and normalize
+        // 2) Resolve HS (prefers hsCode, else productDescription) and normalize
         String resolvedHsCode = resolveHsCodeFromRequest(request);
         if (resolvedHsCode == null || resolvedHsCode.isBlank()) {
-            response = new LinkedHashMap<>();
-            response.put("ok", false);
-            response.put("error", "Either hsCode or productDescription must be provided (no match found).");
-            response.put("productDescription", (String) request.get("productDescription"));
-            return response;
+            throw new IllegalArgumentException("Either hsCode or productDescription must be provided (no match found).");
         }
 
-        // 2) Numbers + validation
+        // 3) Numbers + validation
         if (request.get("goods_value") == null) {
-            Map<String,Object> errorResponse = new LinkedHashMap<>();
-            errorResponse.put("ok", false);
-            errorResponse.put("error", "goods_value is required.");
-            return errorResponse;
+            throw new IllegalArgumentException("goods_value is required.");
         }
-        double declaredGoodsValue = ((Number) request.get("goods_value")).doubleValue();
-        double declaredFreightCost   = request.get("freight")   != null ? ((Number) request.get("freight")).doubleValue()   : 0.0;
-        double declaredInsuranceCost = request.get("insurance") != null ? ((Number) request.get("insurance")).doubleValue() : 0.0;
-        int    declaredQuantity      = request.get("quantity")  != null ? ((Number) request.get("quantity")).intValue()     : 1;
+        double declaredGoodsValue    = gv;
+        double declaredFreightCost   = fr;
+        double declaredInsuranceCost = ins;
+        int    declaredQuantity      = request.get("quantity") == null ? 1 : qty;
 
         if (declaredGoodsValue < 0 || declaredFreightCost < 0 || declaredInsuranceCost < 0 || declaredQuantity < 0) {
-            Map<String,Object> errorResponse = new LinkedHashMap<>();
-            errorResponse.put("ok", false);
-            errorResponse.put("error", "Numeric fields must not be negative.");
-            errorResponse.put("hint", "Please check goods_value, freight, insurance, and quantity.");
-            return errorResponse;
+            throw new IllegalArgumentException("Numeric fields must not be negative. Check goods_value, freight, insurance, and quantity.");
         }
 
-        // 3) Dates
+        // 4) Dates
         DateRange dateRange = parseDateRange(request);
         LocalDate startDate = dateRange.start();
         LocalDate endDate   = dateRange.end();
 
-        // 4) Resolve countries to ISO codes
+        // 5) Resolve countries to ISO codes
         String exporterIsoCode = resolveCountryCode(exporterCountryInput);
         String importerIsoCode = resolveCountryCode(importerCountryInput);
         if (exporterIsoCode == null || importerIsoCode == null) {
-            response = new LinkedHashMap<>();
-            response.put("ok", false);
-            response.put("error", "Invalid country input.");
-            response.put("exporter_input", exporterCountryInput);
-            response.put("importer_input", importerCountryInput);
-            response.put("hint", "Use ISO alpha-2 (e.g., \"SG\") or the exact country name.");
-            return response;
+            throw new IllegalArgumentException("Invalid country input. Use ISO alpha-2 (e.g., \"SG\") or the exact country name.");
         }
 
-        // 5) Quantity-adjusted goods value
-        double quantityAdjustedGoodsValue = declaredGoodsValue * declaredQuantity;
-
-        // 6) Lookup duty/tax (agreement now case-insensitive via SQL + normalized input)
+        // 6) Duty/tax lookup
         Map<String, Object> tariffInfo = getTariffAndTax(
             exporterIsoCode, importerIsoCode, resolvedHsCode, tradeAgreementInput, startDate, endDate
         );
 
         double dutyRatePercent = ((Number) tariffInfo.get("rate_percent")).doubleValue();
-        String customsValuationBasis = (String) tariffInfo.get("customs_basis");  
+        String customsValuationBasis = (String) tariffInfo.get("customs_basis");
         String importerTaxType = (String) tariffInfo.get("tax_type");
         double importerTaxRatePercent = ((Number) tariffInfo.get("tax_rate_percent")).doubleValue();
 
         // 7) Customs value (CIF vs FOB)
-        double computedCustomsValue = (customsValuationBasis != null && customsValuationBasis.equalsIgnoreCase("CIF")) //check if CIF vs FOB
-            ? quantityAdjustedGoodsValue + declaredFreightCost + declaredInsuranceCost //if CIF
-            : quantityAdjustedGoodsValue;  // IF FOB
+        double quantityAdjustedGoodsValue = declaredGoodsValue * declaredQuantity;
+        double computedCustomsValue = (customsValuationBasis != null && customsValuationBasis.equalsIgnoreCase("CIF"))
+            ? quantityAdjustedGoodsValue + declaredFreightCost + declaredInsuranceCost
+            : quantityAdjustedGoodsValue;
 
         // 8) Duty and VAT/GST
         double computedDutyAmount = computedCustomsValue * (dutyRatePercent / 100.0);
         double computedTaxAmount  = (computedCustomsValue + computedDutyAmount) * (importerTaxRatePercent / 100.0);
 
-        // 9) Response
-        response = new LinkedHashMap<>();
+        // 9) Success response
+        Map<String,Object> response = new LinkedHashMap<>();
         response.put("ok", true);
         response.put("exporter_input", exporterCountryInput);
         response.put("importer_input", importerCountryInput);
@@ -442,4 +512,6 @@ public class CalculatorService {
         response.put("total_landed_cost", round2DP(computedCustomsValue + computedDutyAmount + computedTaxAmount));
         return response;
     }
+
+
 }
