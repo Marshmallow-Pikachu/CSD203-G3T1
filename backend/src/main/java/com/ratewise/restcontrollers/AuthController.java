@@ -15,8 +15,9 @@ import com.ratewise.security.dto.LoginResponse;
 import com.ratewise.security.dto.LogoutResponse;
 import com.ratewise.security.dto.MeResponse;
 import com.ratewise.security.dto.RegisterRequest;
-import com.ratewise.security.dto.ValidateResponse;
 import com.ratewise.security.dto.RegisterResponse;
+import com.ratewise.security.dto.ValidateResponse;
+
 
 import com.ratewise.security.SecurityUtils;
 import org.springframework.http.ResponseEntity;
