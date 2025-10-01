@@ -30,11 +30,10 @@ Content-Type: application/json
 # === 3. VALIDATION OF TOKEN ===
 ### Validation of account token
 GET {{baseUrl}}/api/v1/auth/validate
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzU4OTY1NjI0LCJleHAiOjE3NTkwNTIwMjQsImVtYWlsIjoibWFyY0BleGFtcGxlLmNvbSJ9.ucFvO94hfgbQ-Wqpgo-8xziwLbujToidYCMnYPTEsTg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzU5MzM2NzI4LCJleHAiOjE3NTk0MjMxMjgsImVtYWlsIjoibWFyY0BleGFtcGxlLmNvbSJ9.atq6xyVR4pnR-Z_7dJlGAUsD5plT582sCy7GHtRmEwQ
 ### Get current user information
 GET {{baseUrl}}/api/v1/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzU4OTY1NjI0LCJleHAiOjE3NTkwNTIwMjQsImVtYWlsIjoibWFyY0BleGFtcGxlLmNvbSJ9.ucFvO94hfgbQ-Wqpgo-8xziwLbujToidYCMnYPTEsTg
-# === 5. LOGGING OUT OF AN ACCOUNT ===
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzU5MzM2NzI4LCJleHAiOjE3NTk0MjMxMjgsImVtYWlsIjoibWFyY0BleGFtcGxlLmNvbSJ9.atq6xyVR4pnR-Z_7dJlGAUsD5plT582sCy7GHtRmEwQ
 ### Logout user (Delete mapping)
 DELETE {{baseUrl}}/api/v1/auth/logout
-Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzU5MzM2NzA2LCJleHAiOjE3NTk0MjMxMDYsImVtYWlsIjoibWFyY0BleGFtcGxlLmNvbSJ9.cKahga6w0h6HT6SFjAFsKb68NNcwJHacNXNMJZTrHQ4

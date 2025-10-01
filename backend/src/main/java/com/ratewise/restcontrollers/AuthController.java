@@ -5,7 +5,10 @@ import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.User;
 import com.ratewise.security.dto.LoginRequest;
 import com.ratewise.security.dto.LoginResponse;
+import com.ratewise.security.dto.LogoutResponse;
+import com.ratewise.security.dto.MeResponse;
 import com.ratewise.security.dto.RegisterRequest;
+import com.ratewise.security.dto.ValidateResponse;
 import com.ratewise.security.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,18 +64,12 @@ public class AuthController {
      * GET /api/v1/auth/validate
      */
     @GetMapping("/validate")
-    public ResponseEntity<String> validateToken(@RequestHeader("Authorization") String authHeader) {
-        try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(400).body("Invalid token format");
-            }
-
-            String token = authHeader.substring(7);
-            String email = jwtUtil.getEmail(token);
-            return ResponseEntity.status(200).body("Token valid for: " + email);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid token");
-        }
+    public ResponseEntity<ValidateResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        String email = jwtUtil.getEmail(token);
+        String message = "Token valid for: " + email;
+        ValidateResponse response = new ValidateResponse(message);
+        return ResponseEntity.status(200).body(response);
     }
 
     /**
@@ -80,27 +77,15 @@ public class AuthController {
      * GET /api/v1/auth/me
      */
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
-        try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(400).body(Map.of("error", "Invalid token format"));
-            }
-
-            String token = authHeader.substring(7);
-            String email = jwtUtil.getEmail(token);
-            Long userId = jwtUtil.getUserId(token);
-            // Get user details from service
-            User user = authService.getCurrentUser(email);
-            
-            Map<String, Object> userInfo = new LinkedHashMap<>();
-            userInfo.put("userId", userId);
-            userInfo.put("username", user.getUsername());
-            userInfo.put("email", email);
-            
-            return ResponseEntity.status(200).body(userInfo);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
-        }
+    public ResponseEntity<MeResponse> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        String email = jwtUtil.getEmail(token);
+        Long userId = jwtUtil.getUserId(token);
+        // Get user details from service
+        User user = authService.getCurrentUser(email);
+        MeResponse response = new MeResponse(userId, user.getUsername(), email);
+        
+        return ResponseEntity.status(200).body(response);
     }
 
     /**
@@ -108,10 +93,11 @@ public class AuthController {
      * DELETE /api/v1/auth/logout
      */
     @DeleteMapping("/logout")
-    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<LogoutResponse> logout(@RequestHeader("Authorization") String authHeader) {
         try {   
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(400).body("Invalid token format");
+                LogoutResponse response = new LogoutResponse("Invalid token format");
+                return ResponseEntity.status(400).body(response);
             }
 
             String token = authHeader.substring(7);
@@ -119,9 +105,11 @@ public class AuthController {
             
             // Invalidate the user's token
             authService.logout(userId);
-            return ResponseEntity.status(200).body("Logged out successfully"); 
+            LogoutResponse response = new LogoutResponse("Logged out successfully");
+            return ResponseEntity.status(200).body(response); 
         } catch(Exception e) {
-            return ResponseEntity.status(400).body("Invalid token");
+            LogoutResponse response = new LogoutResponse("Invalid token");
+            return ResponseEntity.status(400).body(response);
         }
     }
 }
