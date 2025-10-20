@@ -9,7 +9,7 @@ import com.ratewise.security.dto.RegisterRequest;
 import com.ratewise.security.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
 
 import java.util.*;
 
@@ -30,7 +30,7 @@ public class AuthController {
      * POST /api/v1/auth/register
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody @Validated RegisterRequest request) {
+    public ResponseEntity<String> register(@RequestBody @Valid RegisterRequest request) {
         try {
             authService.register(request);
             return ResponseEntity.status(201).body("User registered successfully");
@@ -44,7 +44,7 @@ public class AuthController {
      * POST /api/v1/auth/login
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Validated LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
         try {
             LoginResponse response = authService.login(request);
             return ResponseEntity.status(200).body(response);

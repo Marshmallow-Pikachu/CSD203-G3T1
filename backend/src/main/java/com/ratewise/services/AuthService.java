@@ -58,32 +58,10 @@ public class AuthService {
             throw new RuntimeException("Username already exists");
         }
 
-        // Manual password validation
-        String password = request.getPassword();
-        
-        // Check if password is null or blank
-        if (password == null || password.trim().isEmpty()) {
-            throw new RuntimeException("Password must be between 8 and 50 characters");
-        }
-        
-        // Check password length
-        if (password.length() < 8 || password.length() > 50) {
-            throw new RuntimeException("Password must be between 8 and 50 characters");
-        }
-        
-        // Check password complexity (at least one lowercase, uppercase, and number)
-        boolean hasLowercase = password.chars().anyMatch(Character::isLowerCase);
-        boolean hasUppercase = password.chars().anyMatch(Character::isUpperCase);
-        boolean hasNumber = password.chars().anyMatch(Character::isDigit);
-        
-        if (!hasLowercase || !hasUppercase || !hasNumber) {
-            throw new RuntimeException("Password must contain at least one lowercase letter, one uppercase letter, and one number");
-        }
-
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(password))
+                .password(passwordEncoder.encode(request.getPassword()))
                 .enabled(true)
                 .createdAt(LocalDateTime.now())
                 .build();
