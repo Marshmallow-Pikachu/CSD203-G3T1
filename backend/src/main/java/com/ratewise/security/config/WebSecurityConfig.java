@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -31,6 +32,7 @@ import java.util.Optional;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class WebSecurityConfig {
 
     private final JWTUtil jwtUtil;
@@ -47,8 +49,8 @@ public class WebSecurityConfig {
         @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) 
-                .cors(cors -> cors.disable()) 
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -58,25 +60,38 @@ public class WebSecurityConfig {
                             "/swagger-ui/**",
                             "/swagger-ui.html"
                         ).permitAll()                
-                        // Public endpoints (no authentication required)
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/auth/register").permitAll()
-                        .requestMatchers("/api/v1/auth/login").permitAll()
-                        .requestMatchers("/api/v1/health/**").permitAll()
-                        .requestMatchers("/db/**").permitAll()
+                        .requestMatchers("/error").permitAll() 
+                        // Public authentication endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/registration").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/session").permitAll()
+                        // Protected authentication endpoints (any authenticated user)
 
-                        // Protected endpoints (authentication required)
-                        .requestMatchers("/api/v1/auth/validate").authenticated()
-                        .requestMatchers("/api/v1/auth/logout").authenticated()
-                        .requestMatchers("/api/v1/auth/me").authenticated()
-                        .requestMatchers("/api/v1/countries/**").authenticated()
-                        .requestMatchers("/api/v1/tariffs/**").authenticated()
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/auth/session").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/profile").hasAnyRole("ADMIN", "USER")
+                         // Admin-only authentication endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/validation").hasRole("ADMIN")
+
+                        .requestMatchers("/api/v1/health/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/db/**").hasAnyRole("ADMIN", "USER")
+
+                        // Admin-only endpoints
+                        .requestMatchers("/api/v1/countries/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/tariffs/**").hasRole("ADMIN")
+                        .requestMatchers("/api/**").hasRole("ADMIN")
+
+                        /* Additional Endpoints once countries and tariff endpoints are up
+                         * .requestMatchers(HttpMethod.POST, "/countries").hasRole("ADMIN") // only admins can add entries into country table
+                         * .requestMatchers(HttpMethod.DELETE, "/countries").hasRole("ADMIN") // only admins can delete entries from country table
+                         * .requestMatchers(HttpMethod.PUT, "/countries").hasRole("ADMIN") // only admins can update country table
+                         * .requestMatchers(HttpMethod.GET, "/countries/**").hasAnyRole("ADMIN", "USER") // users and admin can view entries of the country table
+                         * .requestMatchers(HttpMethod.GET, "/tariffs/**").hasAnyRole("ADMIN", "USER")  // users and admin can view entries of the tariff table
+                         * .requestMatchers(HttpMethod.POST, "/tariffs").hasRole("ADMIN") // only admins can add entries into tariff table
+                         * .requestMatchers(HttpMethod.DELETE, "/tariffs").hasRole("ADMIN") // only admins can delete entries from tariff table
+                         * .requestMatchers(HttpMethod.PUT, "/tariffs").hasRole("ADMIN") // only admins can update tariff table
+                         */
 
                         // Require authentication for any other request
-                        .anyRequest().authenticated())
+                        .anyRequest().hasRole("ADMIN"))
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .build();
     }
@@ -104,6 +119,7 @@ public class WebSecurityConfig {
 
                         Long userId = jwtUtil.getUserId(token);
                         String email = jwtUtil.getEmail(token);
+                        List<String> roles = jwtUtil.getRoles(token);
 
                         Optional<User> userOpt = userRepository.findById(userId);
                         if (userOpt.isEmpty()) throw new RuntimeException("User not found");
@@ -111,8 +127,13 @@ public class WebSecurityConfig {
                         User user = userOpt.get();
                         if (!user.isEnabled()) throw new RuntimeException("User account is disabled");
 
+                        // Convert roles to Spring Security authorities
+                        List<SimpleGrantedAuthority> authorities = roles.stream()
+                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                                .toList();
+
                         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                            email, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            email, null, authorities
                         );
                         SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -130,6 +151,7 @@ public class WebSecurityConfig {
             @Override
             protected boolean shouldNotFilter(HttpServletRequest request) {
                 String path = request.getRequestURI();
+                String method = request.getMethod();
 
                 // Skip JWT validation for SwaggerUI
                 if (path.startsWith("/v3/api-docs/") ||
@@ -138,11 +160,16 @@ public class WebSecurityConfig {
                     return true;
                 }
 
-                // Skip JWT validation for public endpoints
-                return path.startsWith("/api/v1/auth/") ||
-                        path.startsWith("/api/v1/health/") ||
-                        path.startsWith("/db/") ||
-                        path.equals("/");
+                // Skip JWT validation for public authentication endpoints only
+                if (path.equals("/api/v1/auth/registration") && "POST".equals(method)) {
+                    return true;
+                }
+                if (path.equals("/api/v1/auth/session") && "POST".equals(method)) {
+                    return true;
+                }
+
+                // Skip for root path
+                return path.equals("/");
             }
         };
     }

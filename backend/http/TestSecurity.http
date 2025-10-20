@@ -8,7 +8,7 @@
 
 # === 1. REGISTRATION OF AN ACCOUNT ===
 ### Registration of an Account
-POST {{baseUrl}}/api/v1/auth/register
+POST {{baseUrl}}/api/v1/auth/registration
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 
 # === 2. LOGGING INTO AN ACCOUNT ===  
 ### Logging into an Account
-POST {{baseUrl}}/api/v1/auth/login
+POST {{baseUrl}}/api/v1/auth/session
 Content-Type: application/json
 
 {
@@ -29,13 +29,13 @@ Content-Type: application/json
 
 # === 3. VALIDATION OF TOKEN ===
 ### Validation of account token
-GET {{baseUrl}}/api/v1/auth/validate
+GET {{baseUrl}}/api/v1/auth/validation
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
 
 ### Get current user information
-GET {{baseUrl}}/api/v1/auth/me
+GET {{baseUrl}}/api/v1/auth/profile
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
 # === 5. LOGGING OUT OF AN ACCOUNT ===
 ### Logout user (Delete mapping)
-DELETE {{baseUrl}}/api/v1/auth/logout
+DELETE {{baseUrl}}/api/v1/auth/session
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE

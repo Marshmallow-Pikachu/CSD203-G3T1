@@ -1,5 +1,7 @@
 package com.ratewise.security;
 
+import com.ratewise.security.entities.Role;
+import com.ratewise.security.entities.RoleRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -11,14 +13,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public class UserRepository {
     private final JdbcTemplate jdbcTemplate;
+    private final RoleRepository roleRepository;
 
-    public UserRepository(JdbcTemplate jdbcTemplate) {
+    public UserRepository(JdbcTemplate jdbcTemplate, RoleRepository roleRepository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.roleRepository = roleRepository;
     }
 
     private final RowMapper<User> userRowMapper = new RowMapper<User>() {
@@ -125,5 +131,32 @@ public class UserRepository {
         String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, username);
         return count != null && count > 0;
+    }
+
+    public Optional<User> findByUsernameWithRoles(String username) {
+        Optional<User> userOpt = findByUsername(username);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            List<Role> roles = roleRepository.findRolesByUserId(user.getId());
+            user.setRoles(new HashSet<>((roles)));
+            return Optional.of(user);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<User> findByIdWithRoles(Long id) {
+        Optional<User> userOpt = findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            List<Role> roles = roleRepository.findRolesByUserId(user.getId());
+            user.setRoles(new HashSet<>((roles)));
+            return Optional.of(user);
+        }
+        return Optional.empty();
+    }
+
+    public List<User> findAll() {
+        String sql = "SELECT * FROM users ORDER BY created_at DESC";
+        return jdbcTemplate.query(sql, userRowMapper);
     }
 }

@@ -4,8 +4,10 @@ import com.ratewise.security.dto.LoginRequest;
 import com.ratewise.security.dto.LoginResponse;
 import com.ratewise.security.dto.RegisterRequest;
 import com.ratewise.security.UserRepository;
+import com.ratewise.security.entities.RoleRepository;
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.User;
+import com.ratewise.security.entities.Role;
 
 import java.time.LocalDateTime;
 
@@ -17,13 +19,15 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtil jwtUtil;
+    private final RoleRepository roleRepository;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JWTUtil jwtUtil) {
+                       JWTUtil jwtUtil, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.roleRepository = roleRepository;
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -41,9 +45,13 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        // Generate token if all checks pass
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
-        
+        // Load user with roles for token generation
+        User userWithRoles = userRepository.findByIdWithRoles(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Generate token with roles
+        String token = jwtUtil.generateToken(userWithRoles);
+
         return LoginResponse.builder()
                 .accessToken(token)
                 .build();
@@ -88,7 +96,8 @@ public class AuthService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        roleRepository.assignRoleToUser(savedUser.getId(), Role.ROLE_USER);
     }
 
     public User getCurrentUser(String email) {
