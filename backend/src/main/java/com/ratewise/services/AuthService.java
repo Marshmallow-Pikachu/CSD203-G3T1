@@ -3,10 +3,10 @@ package com.ratewise.services;
 import com.ratewise.security.dto.LoginRequest;
 import com.ratewise.security.dto.LoginResponse;
 import com.ratewise.security.dto.RegisterRequest;
-import com.ratewise.security.UserRepository;
-import com.ratewise.security.entities.RoleRepository;
+import com.ratewise.security.repositories.UserRepository;
+import com.ratewise.security.repositories.RoleRepository;
 import com.ratewise.security.util.JWTUtil;
-import com.ratewise.security.User;
+import com.ratewise.security.entities.User;
 import com.ratewise.security.entities.Role;
 
 import java.time.LocalDateTime;
@@ -45,12 +45,12 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        // Load user with roles for token generation
-        User userWithRoles = userRepository.findByIdWithRoles(user.getId())
+        // Load user with role for token generation
+        User userWithRole = userRepository.findByIdWithRole(user.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Generate token with roles
-        String token = jwtUtil.generateToken(userWithRoles);
+        // Generate token with role
+        String token = jwtUtil.generateToken(userWithRole);
 
         return LoginResponse.builder()
                 .accessToken(token)

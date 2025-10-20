@@ -1,6 +1,5 @@
-package com.ratewise.security;
+package com.ratewise.security.entities;
 
-import com.ratewise.security.entities.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,8 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -37,12 +34,12 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
+        inverseJoinColumns = @JoinColumn(name = "role_id"),
+        uniqueConstraints = @UniqueConstraint(columnNames = "user_id")
     )
-    @Builder.Default
-    private Set<Role> roles = new HashSet<>();
+    private Role role;
 }

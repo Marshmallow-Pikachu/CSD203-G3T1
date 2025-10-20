@@ -1,4 +1,4 @@
-package com.ratewise.security;
+package com.ratewise.security.util;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

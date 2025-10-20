@@ -5,9 +5,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 
-@Table(name = "roles")
 @Entity
+@Table(name = "roles")
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,6 +22,10 @@ public class Role {
 
     @Column(name = "role_name", unique = true, nullable = false)
     private String roleName;
+
+    @OneToMany(mappedBy = "role")
+    @Builder.Default
+    private List<User> users = new ArrayList<>();
 
     public static final Long ROLE_ADMIN = 1L;
     public static final Long ROLE_USER = 2L;

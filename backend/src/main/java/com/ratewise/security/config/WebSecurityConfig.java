@@ -23,8 +23,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.ratewise.security.util.JWTUtil;
-import com.ratewise.security.UserRepository;
-import com.ratewise.security.User;
+import com.ratewise.security.repositories.UserRepository;
+import com.ratewise.security.entities.User;
 
 import java.io.IOException;
 import java.util.List;
@@ -75,6 +75,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/db/**").hasAnyRole("ADMIN", "USER")
 
                         // Admin-only endpoints
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/countries/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/tariffs/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").hasRole("ADMIN")
@@ -119,7 +120,7 @@ public class WebSecurityConfig {
 
                         Long userId = jwtUtil.getUserId(token);
                         String email = jwtUtil.getEmail(token);
-                        List<String> roles = jwtUtil.getRoles(token);
+                        String role = jwtUtil.getRole(token);
 
                         Optional<User> userOpt = userRepository.findById(userId);
                         if (userOpt.isEmpty()) throw new RuntimeException("User not found");
@@ -127,10 +128,10 @@ public class WebSecurityConfig {
                         User user = userOpt.get();
                         if (!user.isEnabled()) throw new RuntimeException("User account is disabled");
 
-                        // Convert roles to Spring Security authorities
-                        List<SimpleGrantedAuthority> authorities = roles.stream()
-                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                                .toList();
+                        // Convert role to Spring Security authority
+                        List<SimpleGrantedAuthority> authorities = List.of(
+                                new SimpleGrantedAuthority("ROLE_" + role)
+                        );
 
                         Authentication authentication = new UsernamePasswordAuthenticationToken(
                             email, null, authorities

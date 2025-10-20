@@ -1,5 +1,6 @@
-package com.ratewise.security.entities;
+package com.ratewise.security.repositories;
 
+import com.ratewise.security.entities.Role;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -32,23 +33,32 @@ public class RoleRepository {
         return roles.isEmpty() ? Optional.empty() : Optional.of(roles.get(0));
     }
 
-    public List<Role> findRolesByUserId (Long userId) {
+    public Optional<Role> findRoleByUserId (Long userId) {
         String sql = """
-                SELECT id, role_name
+                SELECT r.id, r.role_name
                 FROM roles r INNER JOIN user_roles ur
                 ON r.id = ur.role_id
                 WHERE ur.user_id = ?
                 """;
-        return jdbcTemplate.query(sql, roleRowMapper, userId);
+        List<Role> roles = jdbcTemplate.query(sql, roleRowMapper, userId);
+        return roles.isEmpty() ? Optional.empty() : Optional.of(roles.get(0));
     }
 
     public void assignRoleToUser(Long userId, Long roleId) {
-        String sql = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING";
-        jdbcTemplate.update(sql, userId, roleId);
+        String deleteSql = "DELETE FROM user_roles WHERE user_id = ?";
+        jdbcTemplate.update(deleteSql, userId);
+
+        String insertSql = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
+        jdbcTemplate.update(insertSql, userId, roleId);
     }
 
-    public void removeRoleFromUser(Long userId, Long roleId) {
-        String sql = "DELETE FROM user_roles WHERE user_id = ? AND role_id = ?";
-        jdbcTemplate.update(sql, userId, roleId);
+    public void removeRoleFromUser(Long userId) {
+        String sql = "DELETE FROM user_roles WHERE user_id = ?";
+        jdbcTemplate.update(sql, userId);
+    }
+
+    public List<Role> findAll() {
+        String sql = "SELECT id, role_name FROM roles ORDER BY id";
+        return jdbcTemplate.query(sql, roleRowMapper);
     }
 }

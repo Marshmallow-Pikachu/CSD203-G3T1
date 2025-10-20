@@ -2,7 +2,7 @@ package com.ratewise.restcontrollers;
 
 import com.ratewise.services.AuthService;
 import com.ratewise.security.util.JWTUtil;
-import com.ratewise.security.User;
+import com.ratewise.security.entities.User;
 import com.ratewise.security.dto.LoginRequest;
 import com.ratewise.security.dto.LoginResponse;
 import com.ratewise.security.dto.RegisterRequest;

@@ -3,7 +3,7 @@ package com.ratewise.security.util;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.ratewise.security.User;
+import com.ratewise.security.entities.User;
 import com.ratewise.security.entities.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,7 @@ public class JWTUtil {
 
     private final ConcurrentHashMap<Long, String> userTokens = new ConcurrentHashMap<>();
 
-    // Issue JWT token with roles
+    // Issue JWT token with role
     public String generateToken(User user) {
         // Check if user already has a valid token
         String existingToken = userTokens.get(user.getId());
@@ -40,17 +40,14 @@ public class JWTUtil {
         Instant now = Instant.now();
         Instant expiry = now.plus(Duration.ofDays(1));
 
-        // Convert roles to comma-separated string
-        String roles = user.getRoles().stream()
-                .map(Role::getRoleName)
-                .collect(Collectors.joining(","));
+        String roleName = user.getRole() != null ? user.getRole().getRoleName() : "";
 
         String newToken = JWT.create()
                 .withSubject(String.valueOf(user.getId()))
                 .withIssuedAt(Date.from(now))
                 .withExpiresAt(Date.from(expiry))
                 .withClaim("email", user.getEmail())
-                .withClaim("roles", roles)
+                .withClaim("role", roleName)
                 .sign(Algorithm.HMAC256(secretKey));
 
         userTokens.put(user.getId(), newToken);
@@ -75,13 +72,10 @@ public class JWTUtil {
         return validateToken(token).getClaim("email").asString();
     }
 
-    // Extract roles from token
-    public List<String> getRoles(String token) {
-        String rolesString = validateToken(token).getClaim("roles").asString();
-        if (rolesString == null || rolesString.isEmpty()) {
-            return List.of();
-        }
-        return Arrays.asList(rolesString.split(","));
+    // Extract role from token
+    public String getRole(String token) {
+        String role = validateToken(token).getClaim("role").asString();
+        return role != null ? role : "";
     }
 
     public void invalidateUserToken(Long userId) {

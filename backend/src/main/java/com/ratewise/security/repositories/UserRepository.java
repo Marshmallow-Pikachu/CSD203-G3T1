@@ -1,7 +1,7 @@
-package com.ratewise.security;
+package com.ratewise.security.repositories;
 
+import com.ratewise.security.entities.User;
 import com.ratewise.security.entities.Role;
-import com.ratewise.security.entities.RoleRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -133,23 +132,23 @@ public class UserRepository {
         return count != null && count > 0;
     }
 
-    public Optional<User> findByUsernameWithRoles(String username) {
+    public Optional<User> findByUsernameWithRole(String username) {
         Optional<User> userOpt = findByUsername(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            List<Role> roles = roleRepository.findRolesByUserId(user.getId());
-            user.setRoles(new HashSet<>((roles)));
+            Optional<Role> role = roleRepository.findRoleByUserId(user.getId());
+            role.ifPresent(user::setRole);
             return Optional.of(user);
         }
         return Optional.empty();
     }
 
-    public Optional<User> findByIdWithRoles(Long id) {
+    public Optional<User> findByIdWithRole(Long id) {
         Optional<User> userOpt = findById(id);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            List<Role> roles = roleRepository.findRolesByUserId(user.getId());
-            user.setRoles(new HashSet<>((roles)));
+            Optional<Role> role = roleRepository.findRoleByUserId(user.getId());
+            role.ifPresent(user::setRole);
             return Optional.of(user);
         }
         return Optional.empty();
