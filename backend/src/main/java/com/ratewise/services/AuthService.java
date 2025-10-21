@@ -8,6 +8,11 @@ import com.ratewise.security.repositories.RoleRepository;
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.entities.User;
 import com.ratewise.security.entities.Role;
+import com.ratewise.security.exception.EmailAlreadyExistsException;
+import com.ratewise.security.exception.UsernameAlreadyExistsException;
+import com.ratewise.security.exception.InvalidCredentialsException;
+import com.ratewise.security.exception.AccountDisabledException;
+import com.ratewise.security.exception.UserNotFoundException;
 
 import java.time.LocalDateTime;
 
@@ -33,21 +38,21 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         // Check if user exists
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Invalid username"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         // Check if account is enabled
         if (!user.isEnabled()) {
-            throw new RuntimeException("Account is disabled");
+            throw new AccountDisabledException("Account is disabled");
         }
 
         // Check password, throw error for wrong password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new InvalidCredentialsException("Invalid username or password");
         }
 
         // Load user with role for token generation
         User userWithRole = userRepository.findByIdWithRole(user.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         // Generate token with role
         String token = jwtUtil.generateToken(userWithRole);
@@ -59,39 +64,17 @@ public class AuthService {
 
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-        
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new EmailAlreadyExistsException("Email already exists");
         }
 
-        // Manual password validation
-        String password = request.getPassword();
-        
-        // Check if password is null or blank
-        if (password == null || password.trim().isEmpty()) {
-            throw new RuntimeException("Password must be between 8 and 50 characters");
-        }
-        
-        // Check password length
-        if (password.length() < 8 || password.length() > 50) {
-            throw new RuntimeException("Password must be between 8 and 50 characters");
-        }
-        
-        // Check password complexity (at least one lowercase, uppercase, and number)
-        boolean hasLowercase = password.chars().anyMatch(Character::isLowerCase);
-        boolean hasUppercase = password.chars().anyMatch(Character::isUpperCase);
-        boolean hasNumber = password.chars().anyMatch(Character::isDigit);
-        
-        if (!hasLowercase || !hasUppercase || !hasNumber) {
-            throw new RuntimeException("Password must contain at least one lowercase letter, one uppercase letter, and one number");
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new UsernameAlreadyExistsException("Username already exists");
         }
 
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(password))
+                .password(passwordEncoder.encode(request.getPassword()))
                 .enabled(true)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -102,10 +85,10 @@ public class AuthService {
 
     public User getCurrentUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
-    public void logout(Long userId) {
+    public void logout(String userId) {
         jwtUtil.invalidateUserToken(userId);
     }
 }

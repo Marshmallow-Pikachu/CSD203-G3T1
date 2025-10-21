@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class LogoutResponse {
-    private final String message;
-    private final String userId;
+public class RoleResponse {
+    private final long roleId;
+    private final String roleName;
 }

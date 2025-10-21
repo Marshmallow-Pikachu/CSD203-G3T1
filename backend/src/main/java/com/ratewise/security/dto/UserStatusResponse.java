@@ -5,7 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class LogoutResponse {
+public class UserStatusResponse {
     private final String message;
     private final String userId;
+    private final Boolean isActive;
 }

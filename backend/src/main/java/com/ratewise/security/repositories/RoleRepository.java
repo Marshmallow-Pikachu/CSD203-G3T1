@@ -33,7 +33,7 @@ public class RoleRepository {
         return roles.isEmpty() ? Optional.empty() : Optional.of(roles.get(0));
     }
 
-    public Optional<Role> findRoleByUserId (Long userId) {
+    public Optional<Role> findRoleByUserId (String userId) {
         String sql = """
                 SELECT r.id, r.role_name
                 FROM roles r INNER JOIN user_roles ur
@@ -44,7 +44,7 @@ public class RoleRepository {
         return roles.isEmpty() ? Optional.empty() : Optional.of(roles.get(0));
     }
 
-    public void assignRoleToUser(Long userId, Long roleId) {
+    public void assignRoleToUser(String userId, Long roleId) {
         String deleteSql = "DELETE FROM user_roles WHERE user_id = ?";
         jdbcTemplate.update(deleteSql, userId);
 
@@ -52,7 +52,7 @@ public class RoleRepository {
         jdbcTemplate.update(insertSql, userId, roleId);
     }
 
-    public void removeRoleFromUser(Long userId) {
+    public void removeRoleFromUser(String userId) {
         String sql = "DELETE FROM user_roles WHERE user_id = ?";
         jdbcTemplate.update(sql, userId);
     }

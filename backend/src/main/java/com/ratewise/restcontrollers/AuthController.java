@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
 
 import java.util.*;
 
@@ -38,7 +38,7 @@ public class AuthController {
         @ApiResponse(responseCode = "400", description = "Invalid request or user already exists")
     })
     @PostMapping("/registration")
-    public ResponseEntity<String> register(@RequestBody @Validated RegisterRequest request) {
+    public ResponseEntity<String> register(@RequestBody @Valid RegisterRequest request) {
         authService.register(request);
         return ResponseEntity.status(201).body("User registered successfully");
     }
@@ -53,7 +53,7 @@ public class AuthController {
         @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
     @PostMapping("/session")
-    public ResponseEntity<LoginResponse> login(@RequestBody @Validated LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
@@ -103,7 +103,7 @@ public class AuthController {
         String token = authHeader.substring(7);
         String username = jwtUtil.getUsername(token);
         String email = jwtUtil.getEmail(token);
-        Long userId = jwtUtil.getUserId(token);
+        String userId = jwtUtil.getUserId(token);
 
         // Get user details from service
         User user = authService.getCurrentUser(email);
@@ -132,7 +132,7 @@ public class AuthController {
         }
 
         String token = authHeader.substring(7);
-        Long userId = jwtUtil.getUserId(token);
+        String userId = jwtUtil.getUserId(token);
 
         // Invalidate the user's token
         authService.logout(userId);

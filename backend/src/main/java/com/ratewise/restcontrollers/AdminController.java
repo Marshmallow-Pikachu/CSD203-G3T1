@@ -1,5 +1,6 @@
 package com.ratewise.restcontrollers;
 
+import com.ratewise.security.dto.*;
 import com.ratewise.security.entities.Role;
 import com.ratewise.security.entities.User;
 import com.ratewise.security.exception.RoleNotFoundException;
@@ -8,11 +9,10 @@ import com.ratewise.security.repositories.UserRepository;
 import com.ratewise.security.repositories.RoleRepository;
 import com.ratewise.security.util.JWTUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,23 +44,24 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/users")
-    public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
-        List<Map<String, Object>> users = new ArrayList<>();
+    public ResponseEntity<List<UserSummaryResponse>> getAllUsers() {
+        List<UserSummaryResponse> users = new ArrayList<>();
 
         List<User> allUsers = userRepository.findAll();
 
         allUsers.forEach(user -> {
             Optional<User> userWithRole = userRepository.findByIdWithRole(user.getId());
             userWithRole.ifPresent(u -> {
-                Map<String, Object> userMap = new LinkedHashMap<>();
-                userMap.put("id", u.getId());
-                userMap.put("username", u.getUsername());
-                userMap.put("email", u.getEmail());
-                userMap.put("isActive", u.isEnabled());
-                userMap.put("createdAt", u.getCreatedAt());
                 String roleName = u.getRole() != null ? u.getRole().getRoleName() : null;
-                userMap.put("role", roleName);
-                users.add(userMap);
+                UserSummaryResponse userResponse = UserSummaryResponse.builder()
+                        .userId(u.getId())
+                        .username(u.getUsername())
+                        .email(u.getEmail())
+                        .isActive(u.isEnabled())
+                        .createdAt(u.getCreatedAt())
+                        .role(roleName)
+                        .build();
+                users.add(userResponse);
             });
         });
 
@@ -78,22 +79,22 @@ public class AdminController {
             @ApiResponse(responseCode = "403", description = "Access denied - Admin only")
     })
     @GetMapping("/users/{id}")
-    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable long id) {
+    public ResponseEntity<SpecificUserDetailResponse> getUserById(@PathVariable String id) {
         Optional<User> userOpt = userRepository.findByIdWithRole(id);
         if(userOpt.isEmpty()) {
             throw new UserNotFoundException(id);
         }
 
         User user = userOpt.get();
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("message", "User found");
-        response.put("userId", user.getId());
-        response.put("username", user.getUsername());
-        response.put("email", user.getEmail());
-        response.put("isActive", user.isEnabled());
-        response.put("createdAt", user.getCreatedAt());
-        String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
-        response.put("role", roleName);
+        SpecificUserDetailResponse response = SpecificUserDetailResponse.builder()
+                .message("User found")
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .isActive(user.isEnabled())
+                .createdAt(user.getCreatedAt())
+                .role(user.getRole().getRoleName())
+                .build();
 
         return ResponseEntity.ok(response);
     }
@@ -110,7 +111,7 @@ public class AdminController {
             @ApiResponse(responseCode = "403", description = "Access denied - Admin only")
     })
     @PutMapping("/users/{userId}/role/{roleId}")
-    public ResponseEntity<Map<String, Object>> updateUserRole(@PathVariable Long userId, @PathVariable Long roleId) {
+    public ResponseEntity<RoleUpdateResponse> updateUserRole(@PathVariable String userId, @PathVariable Long roleId) {
         Optional<User> userOpt = userRepository.findById(userId);
         if(userOpt.isEmpty()) {
             throw new UserNotFoundException(userId);
@@ -126,13 +127,15 @@ public class AdminController {
         // Invalidate user's token so they need to re-login with new role
         jwtUtil.invalidateUserToken(userId);
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("message", "Role updated successfully");
-        response.put("userId", userId);
-        response.put("username", userOpt.get().getUsername());
-        response.put("email", userOpt.get().getEmail());
-        response.put("newRole", roleOpt.get().getRoleName());
-        response.put("note", "User must re-login for changes to take effect");
+        RoleUpdateResponse response = RoleUpdateResponse.builder()
+                        .message("Role updated successfully for " + userOpt.get().getEmail())
+                        .userId(userId)
+                        .username(userOpt.get().getUsername())
+                        .email(userOpt.get().getEmail())
+                        .newRole(roleOpt.get().getRoleName())
+                        .note("User must re-login for changes to take effect")
+                        .build();
+
         return ResponseEntity.ok(response);
     }
 
@@ -148,29 +151,30 @@ public class AdminController {
             @ApiResponse(responseCode = "403", description = "Access denied - Admin only")
     })
     @PatchMapping("/users/{id}/status")
-    public ResponseEntity<Map<String, Object>> updateUserStatus(@PathVariable Long id, @RequestBody Map<String, Boolean> request) {
+    public ResponseEntity<UserStatusResponse> updateUserStatus(@PathVariable String id, @RequestBody @Valid UserStatusRequest request) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) {
             throw new UserNotFoundException(id);
         }
 
-        if (!request.containsKey("isActive")) {
+        if (request.getIsActive() == null) {
             throw new IllegalArgumentException("Invalid request body: 'isActive' field is required");
         }
 
         // Invalidate token if disabling user
-        if (Boolean.FALSE.equals(request.get("isActive"))) {
+        if (Boolean.FALSE.equals(request.getIsActive())) {
             jwtUtil.invalidateUserToken(id);
         }
 
         User user = userOpt.get();
-        user.setEnabled(request.get("isActive"));
+        user.setEnabled(request.getIsActive());
         userRepository.save(user);
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("message", "User status updated successfully");
-        response.put("userId", id);
-        response.put("isActive", user.isEnabled());
+        UserStatusResponse response = UserStatusResponse.builder()
+                        .message("User status updated successfully")
+                        .userId(id)
+                        .isActive(user.isEnabled())
+                        .build();
 
         return ResponseEntity.ok(response);
     }
@@ -185,15 +189,17 @@ public class AdminController {
             @ApiResponse(responseCode = "403", description = "Access denied - Admin only")
     })
     @GetMapping("/roles")
-    public ResponseEntity<List<Map<String, Object>>> getAllRoles() {
+    public ResponseEntity<List<RoleResponse>> getAllRoles() {
         List<Role> roles = roleRepository.findAll();
-        List<Map<String, Object>> response = new ArrayList<>();
+        List<RoleResponse> response = new ArrayList<>();
 
         roles.forEach(role -> {
-            Map<String, Object> roleMap = new LinkedHashMap<>();
-            roleMap.put("id", role.getId());
-            roleMap.put("roleName", role.getRoleName());
-            response.add(roleMap);
+            RoleResponse roleResponse = RoleResponse.builder()
+                            .roleId(role.getId())
+                            .roleName(role.getRoleName())
+                            .build();
+
+            response.add(roleResponse);
         });
 
         return ResponseEntity.ok(response);

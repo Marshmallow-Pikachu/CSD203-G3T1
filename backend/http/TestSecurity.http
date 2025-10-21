@@ -6,36 +6,85 @@
 # Azure deployed backend (when app is live on Azure App Service)
 # @baseUrl = https://csd-asssignment-g3-1.azurewebsites.net
 
-# === 1. REGISTRATION OF AN ACCOUNT ===
+# === AUTHENTICATION ===
+
+## == 1. REGISTRATION OF AN ACCOUNT ==
 ### Registration of an Account
 POST {{baseUrl}}/api/v1/auth/registration
 Content-Type: application/json
 
 {
-  "username": "notjeff",
-  "email": "jeff@example.com",
-  "password": "Abcd1234"
+  "username": "mewantcookies",
+  "email": "mewantcookies@gmail.com",
+  "password": "StrongPassword123!"
 }
 
-# === 2. LOGGING INTO AN ACCOUNT ===  
+## == 2. LOGGING INTO AN ACCOUNT == 
 ### Logging into an Account
 POST {{baseUrl}}/api/v1/auth/session
 Content-Type: application/json
 
 {
-  "username": "notjeff",
-  "password": "Abcd1234"
+  "username": "mewantcookies",
+  "password": "StrongPassword123!"
 }
 
-# === 3. VALIDATION OF TOKEN ===
-### Validation of account token
+## == 3. VALIDATION OF TOKEN ==
+### Validation of account token (Admin only)
 GET {{baseUrl}}/api/v1/auth/validation
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
-
+Authorization: Bearer PASTE_ADMIN_ACCESS_TOKEN_HERE
+## == 4. PROFILE OF CURRENT USER ==
 ### Get current user information
 GET {{baseUrl}}/api/v1/auth/profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
-# === 5. LOGGING OUT OF AN ACCOUNT ===
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+## == 5. LOGGING OUT OF AN ACCOUNT ==
 ### Logout user (Delete mapping)
 DELETE {{baseUrl}}/api/v1/auth/session
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+
+# === ADMIN ENDPOINTS ===
+# Note: These endpoints require ADMIN role. Make sure to login as an admin user first.
+
+## == 1. GET ALL USERS ==
+### Get all users (Admin only)
+GET {{baseUrl}}/api/v1/admin/users
+Authorization: Bearer PASTE_ADMIN_ACCESS_TOKEN_HERE
+
+## == 2. GET USER BY ID ==
+### Get specific user by ID (Admin only)
+### Replace USER_ID_HERE with the actual user ID. An actual valid user ID you can use to test is 0ddad3fd-ff8f-4f44-82f5-1c20ab54c596.
+GET {{baseUrl}}/api/v1/admin/users/USER_ID_HERE
+Authorization: Bearer PASTE_ADMIN_ACCESS_TOKEN_HERE
+
+## == 3. GET ALL ROLES ==
+### Get all available roles (Admin only)
+GET {{baseUrl}}/api/v1/admin/roles
+Authorization: Bearer PASTE_ADMIN_ACCESS_TOKEN_HERE
+
+## == 4. UPDATE USER ROLE ==
+### Update a user's role to an admin or demote admin to user (Admin only)
+### Replace USER_ID_HERE with the actual user ID and ROLE_ID_HERE with the role ID (e.g., 1, 2)
+PUT {{baseUrl}}/api/v1/admin/users/USER_ID_HERE/role/ROLE_ID_HERE
+Authorization: Bearer PASTE_ADMIN_ACCESS_TOKEN_HERE
+
+## == 5. ENABLE USER/ADMIN ACCOUNT ==
+### Enable a user/admin account (Admin only)
+PATCH {{baseUrl}}/api/v1/admin/users/USER_ID_HERE/status
+Authorization: Bearer PASTE_ADMIN_ACCESS_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "isActive": true
+}
+
+## == 6. DISABLE USER/ADMIN ACCOUNT ==
+### Disable a user/admin account (Admin only)
+PATCH {{baseUrl}}/api/v1/admin/users/USER_ID_HERE/status
+Authorization: Bearer PASTE_ADMIN_ACCESS_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "isActive": false
+}

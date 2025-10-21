@@ -22,7 +22,7 @@ public class JWTUtil {
     @Value("${security.jwt.secret-key}")
     private String secretKey;
 
-    private final ConcurrentHashMap<Long, String> userTokens = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, String> userTokens = new ConcurrentHashMap<>();
 
     // Issue JWT token with role
     public String generateToken(User user) {
@@ -43,9 +43,10 @@ public class JWTUtil {
         String roleName = user.getRole() != null ? user.getRole().getRoleName() : "";
 
         String newToken = JWT.create()
-                .withSubject(String.valueOf(user.getId()))
+                .withSubject(user.getId())
                 .withIssuedAt(Date.from(now))
                 .withExpiresAt(Date.from(expiry))
+                .withClaim("username", user.getUsername())
                 .withClaim("email", user.getEmail())
                 .withClaim("role", roleName)
                 .sign(Algorithm.HMAC256(secretKey));
@@ -68,8 +69,8 @@ public class JWTUtil {
     }
 
     // Extract user ID from token
-    public Long getUserId(String token) {
-        return Long.valueOf(validateToken(token).getSubject());
+    public String getUserId(String token) {
+        return validateToken(token).getSubject();
     }
 
     // Extract email from token
@@ -83,14 +84,14 @@ public class JWTUtil {
         return role != null ? role : "";
     }
 
-    public void invalidateUserToken(Long userId) {
+    public void invalidateUserToken(String userId) {
         userTokens.remove(userId);
     }
 
     public boolean isTokenActiveForUser(String token) {
         try {
             DecodedJWT decoded = validateToken(token);
-            Long userId = Long.valueOf(decoded.getSubject());
+            String userId = decoded.getSubject();
             String activeToken = userTokens.get(userId);
             return token.equals(activeToken);
         } catch (Exception e) {

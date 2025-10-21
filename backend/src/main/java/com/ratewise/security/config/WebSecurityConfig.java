@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.repositories.UserRepository;
@@ -46,7 +51,7 @@ public class WebSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
-        @Bean
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
@@ -60,7 +65,7 @@ public class WebSecurityConfig {
                             "/swagger-ui/**",
                             "/swagger-ui.html"
                         ).permitAll()                
-                        .requestMatchers("/error").permitAll() 
+                        .requestMatchers("/error").permitAll()
                         // Public authentication endpoints
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/registration").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/session").permitAll()
@@ -118,7 +123,12 @@ public class WebSecurityConfig {
 
                         jwtUtil.validateToken(token);
 
-                        Long userId = jwtUtil.getUserId(token);
+                        // Check if token is still active (not logged out)
+                        if (!jwtUtil.isTokenActiveForUser(token)) {
+                            throw new RuntimeException("Token has been invalidated");
+                        }
+
+                        String userId = jwtUtil.getUserId(token);
                         String email = jwtUtil.getEmail(token);
                         String role = jwtUtil.getRole(token);
 
@@ -151,6 +161,7 @@ public class WebSecurityConfig {
 
             @Override
             protected boolean shouldNotFilter(HttpServletRequest request) {
+                // Only run JWT auth for API paths; skip everything else (static, SPA, swagger, etc.)
                 String path = request.getRequestURI();
                 String method = request.getMethod();
 
@@ -173,5 +184,24 @@ public class WebSecurityConfig {
                 return path.equals("/");
             }
         };
+    }
+
+    // CORS configuration (might not even be needed since we are using same app service to run both frontend and back end so its the same origin
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173"
+            // Add more only if you host the frontend separately
+            // "https://<your-frontend>.azurestaticapps.net"
+        ));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
+        config.setAllowedHeaders(List.of("Authorization","Content-Type"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }
