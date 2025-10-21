@@ -163,9 +163,6 @@ public class WebSecurityConfig {
             protected boolean shouldNotFilter(HttpServletRequest request) {
                 // Only run JWT auth for API paths; skip everything else (static, SPA, swagger, etc.)
                 String path = request.getRequestURI();
-<<<<<<< HEAD
-                return !path.startsWith("/api/") || path.startsWith("/api/v1/auth/");
-=======
                 String method = request.getMethod();
 
                 // Skip JWT validation for SwaggerUI
@@ -185,7 +182,6 @@ public class WebSecurityConfig {
 
                 // Skip for root path
                 return path.equals("/");
->>>>>>> rbac-implementation
             }
         };
     }
