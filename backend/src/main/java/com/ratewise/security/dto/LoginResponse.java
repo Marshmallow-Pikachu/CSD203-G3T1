@@ -1,9 +1,12 @@
 package com.ratewise.security.dto;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
 
-@Getter
+
+@Data
 @Builder
 public class LoginResponse {
     private final String accessToken;

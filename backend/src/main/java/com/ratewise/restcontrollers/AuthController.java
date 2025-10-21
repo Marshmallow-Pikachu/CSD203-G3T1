@@ -1,11 +1,9 @@
 package com.ratewise.restcontrollers;
 
+import com.ratewise.security.dto.*;
 import com.ratewise.services.AuthService;
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.entities.User;
-import com.ratewise.security.dto.LoginRequest;
-import com.ratewise.security.dto.LoginResponse;
-import com.ratewise.security.dto.RegisterRequest;
 import com.ratewise.security.exception.JwtTokenException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -70,14 +68,21 @@ public class AuthController {
         @ApiResponse(responseCode = "401", description = "Invalid or expired token")
     })
     @GetMapping("/validation")
-    public ResponseEntity<String> validateToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<TokenValidationResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new JwtTokenException("Invalid token format");
         }
 
         String token = authHeader.substring(7);
         String email = jwtUtil.getEmail(token);
-        return ResponseEntity.ok("Token valid for: " + email);
+
+        TokenValidationResponse response = TokenValidationResponse.builder()
+                .message("Token valid for : " + email)
+                .email(email)
+                .valid(true)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -90,24 +95,25 @@ public class AuthController {
         @ApiResponse(responseCode = "401", description = "Invalid or expired token")
     })
     @GetMapping("/profile")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ProfileResponse> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new JwtTokenException("Invalid token format");
         }
 
         String token = authHeader.substring(7);
+        String username = jwtUtil.getUsername(token);
         String email = jwtUtil.getEmail(token);
         Long userId = jwtUtil.getUserId(token);
 
         // Get user details from service
         User user = authService.getCurrentUser(email);
+        ProfileResponse response = ProfileResponse.builder()
+                .userId(userId)
+                .username(username)
+                .email(email)
+                .build();
 
-        Map<String, Object> userInfo = new LinkedHashMap<>();
-        userInfo.put("userId", userId);
-        userInfo.put("username", user.getUsername());
-        userInfo.put("email", email);
-
-        return ResponseEntity.ok(userInfo);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -120,7 +126,7 @@ public class AuthController {
         @ApiResponse(responseCode = "401", description = "Invalid or expired token")
     })
     @DeleteMapping("/session")
-    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<LogoutResponse> logout(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new JwtTokenException("Invalid token format");
         }
@@ -130,6 +136,11 @@ public class AuthController {
 
         // Invalidate the user's token
         authService.logout(userId);
-        return ResponseEntity.ok("Logged out successfully");
+
+        LogoutResponse response = LogoutResponse.builder()
+                .message("You have logged out successfully!")
+                .userId(userId)
+                .build();
+        return ResponseEntity.ok(response);
     }
 }

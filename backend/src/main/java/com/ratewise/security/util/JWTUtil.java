@@ -62,6 +62,11 @@ public class JWTUtil {
                 .verify(token);
     }
 
+    // Extract username from token
+    public String getUsername(String token) {
+        return validateToken(token).getClaim("username").asString();
+    }
+
     // Extract user ID from token
     public Long getUserId(String token) {
         return Long.valueOf(validateToken(token).getSubject());
