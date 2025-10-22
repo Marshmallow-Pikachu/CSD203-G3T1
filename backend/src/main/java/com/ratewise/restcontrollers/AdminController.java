@@ -9,6 +9,8 @@ import com.ratewise.security.repositories.UserRepository;
 import com.ratewise.security.repositories.RoleRepository;
 import com.ratewise.security.util.JWTUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,8 +42,10 @@ public class AdminController {
     @Operation(summary = "Get all users", description = "Retrieve all users with their role (Admin only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
-            @ApiResponse(responseCode = "403", description = "Access denied - Admin only"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "403", description = "Access denied - Admin only",
+                    content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @GetMapping("/users")
     public ResponseEntity<List<UserSummaryResponse>> getAllUsers() {
@@ -75,8 +79,10 @@ public class AdminController {
     @Operation(summary = "Get user by ID", description = "Retrieve a specific user with their role (Admin only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User found"),
-            @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "403", description = "Access denied - Admin only")
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "403", description = "Access denied - Admin only",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @GetMapping("/users/{id}")
     public ResponseEntity<SpecificUserDetailResponse> getUserById(@PathVariable String id) {
@@ -107,8 +113,10 @@ public class AdminController {
     @Operation(summary = "Update user role", description = "Update a user's role - replaces existing role (Admin only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Role updated successfully"),
-            @ApiResponse(responseCode = "404", description = "User or role not found"),
-            @ApiResponse(responseCode = "403", description = "Access denied - Admin only")
+            @ApiResponse(responseCode = "404", description = "User or role not found",
+                    content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "403", description = "Access denied - Admin only",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @PutMapping("/users/{userId}/role/{roleId}")
     public ResponseEntity<RoleUpdateResponse> updateUserRole(@PathVariable String userId, @PathVariable Long roleId) {
@@ -146,9 +154,12 @@ public class AdminController {
     @Operation(summary = "Update user status", description = "Enable or disable a user account (Admin only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User status updated successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid request body"),
-            @ApiResponse(responseCode = "403", description = "Access denied - Admin only")
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "400", description = "Invalid request body",
+                    content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "403", description = "Access denied - Admin only",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @PatchMapping("/users/{id}/status")
     public ResponseEntity<UserStatusResponse> updateUserStatus(@PathVariable String id, @RequestBody @Valid UserStatusRequest request) {
@@ -186,7 +197,8 @@ public class AdminController {
     @Operation(summary = "Get all roles", description = "Retrieve all available roles (Admin only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Roles retrieved successfully"),
-            @ApiResponse(responseCode = "403", description = "Access denied - Admin only")
+            @ApiResponse(responseCode = "403", description = "Access denied - Admin only",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @GetMapping("/roles")
     public ResponseEntity<List<RoleResponse>> getAllRoles() {

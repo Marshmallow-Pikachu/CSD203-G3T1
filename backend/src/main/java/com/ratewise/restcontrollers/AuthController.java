@@ -6,6 +6,8 @@ import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.entities.User;
 import com.ratewise.security.exception.JwtTokenException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +37,8 @@ public class AuthController {
     @Operation(summary = "Register new user", description = "Register a new user account")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "User registered successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request or user already exists")
+        @ApiResponse(responseCode = "400", description = "Invalid request or user already exists",
+                        content = @Content(schema = @Schema(hidden = true)))
     })
     @PostMapping("/registration")
     public ResponseEntity<String> register(@RequestBody @Valid RegisterRequest request) {
@@ -50,7 +53,8 @@ public class AuthController {
     @Operation(summary = "User login", description = "Authenticate user and receive JWT token")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Login successful"),
-        @ApiResponse(responseCode = "401", description = "Invalid credentials")
+        @ApiResponse(responseCode = "401", description = "Invalid credentials",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @PostMapping("/session")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
@@ -65,7 +69,8 @@ public class AuthController {
     @Operation(summary = "Validate JWT token", description = "Validate a JWT token (Admin only)")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Token is valid"),
-        @ApiResponse(responseCode = "401", description = "Invalid or expired token")
+        @ApiResponse(responseCode = "401", description = "Invalid or expired token",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @GetMapping("/validation")
     public ResponseEntity<TokenValidationResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
@@ -92,7 +97,8 @@ public class AuthController {
     @Operation(summary = "Get current user profile", description = "Retrieve current authenticated user information")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User profile retrieved"),
-        @ApiResponse(responseCode = "401", description = "Invalid or expired token")
+        @ApiResponse(responseCode = "401", description = "Invalid or expired token",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @GetMapping("/profile")
     public ResponseEntity<ProfileResponse> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
@@ -123,7 +129,8 @@ public class AuthController {
     @Operation(summary = "Logout user", description = "Invalidate user's JWT token")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Logout successful"),
-        @ApiResponse(responseCode = "401", description = "Invalid or expired token")
+        @ApiResponse(responseCode = "401", description = "Invalid or expired token",
+                    content = @Content(schema = @Schema(hidden = true)))
     })
     @DeleteMapping("/session")
     public ResponseEntity<LogoutResponse> logout(@RequestHeader("Authorization") String authHeader) {
