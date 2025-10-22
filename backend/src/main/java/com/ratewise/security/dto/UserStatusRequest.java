@@ -1,13 +1,14 @@
 package com.ratewise.security.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
-@Data
+@Getter
 @Builder
-public class LoginResponse {
-    private final String accessToken;
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserStatusRequest {
+    private Boolean isActive;
 }
