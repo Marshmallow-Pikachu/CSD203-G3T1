@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Calculator from "./pages/Calculator";
 import Tariffs from "./pages/Tariffs"; 
+import Signup from "./pages/Signup";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem("accessToken");
@@ -17,6 +18,7 @@ export default function App() {
       <Routes>
         {/* Login as the entry point */}
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* Protected routes */}
