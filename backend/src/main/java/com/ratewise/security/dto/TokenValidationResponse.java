@@ -10,4 +10,6 @@ public class TokenValidationResponse {
     private final String message;
     private final String email;
     private final boolean valid;
+    private final String oauthProvider;
+    private final String oauthProviderId;
 }

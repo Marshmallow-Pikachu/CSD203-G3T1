@@ -30,9 +30,9 @@ Content-Type: application/json
 }
 
 ## == 3. VALIDATION OF TOKEN ==
-### Validation of account token (Admin only)
+### Validation of account token
 GET {{baseUrl}}/api/v1/auth/validation
-Authorization: Bearer PASTE_ADMIN_ACCESS_TOKEN_HERE
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 ## == 4. PROFILE OF CURRENT USER ==
 ### Get current user information

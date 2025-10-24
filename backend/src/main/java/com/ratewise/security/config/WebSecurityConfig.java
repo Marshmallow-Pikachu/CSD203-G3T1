@@ -30,6 +30,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.repositories.UserRepository;
 import com.ratewise.security.entities.User;
+import com.ratewise.security.oauth2.CustomOAuth2UserService;
+import com.ratewise.security.oauth2.OAuth2LoginSuccessHandler;
+import com.ratewise.security.oauth2.OAuth2LoginFailureHandler;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,10 +45,20 @@ public class WebSecurityConfig {
 
     private final JWTUtil jwtUtil;
     private final UserRepository userRepository;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
-    public WebSecurityConfig(JWTUtil jwtUtil, UserRepository userRepository) {
+    public WebSecurityConfig(JWTUtil jwtUtil,
+                           UserRepository userRepository,
+                           CustomOAuth2UserService customOAuth2UserService,
+                           OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
+                           OAuth2LoginFailureHandler oAuth2LoginFailureHandler) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
+        this.oAuth2LoginFailureHandler = oAuth2LoginFailureHandler;
     }
 
     @Bean
@@ -64,17 +77,17 @@ public class WebSecurityConfig {
                             "/v3/api-docs/**",
                             "/swagger-ui/**",
                             "/swagger-ui.html"
-                        ).permitAll()                
+                        ).permitAll()
                         .requestMatchers("/error").permitAll()
+                        // OAuth2 endpoints
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         // Public authentication endpoints
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/registration").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/session").permitAll()
                         // Protected authentication endpoints (any authenticated user)
-
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/auth/session").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/profile").hasAnyRole("ADMIN", "USER")
-                         // Admin-only authentication endpoints
-                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/validation").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/validation").hasAnyRole("ADMIN", "USER")
 
                         .requestMatchers("/api/v1/health/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/db/**").hasAnyRole("ADMIN", "USER")
@@ -98,6 +111,11 @@ public class WebSecurityConfig {
 
                         // Require authentication for any other request
                         .anyRequest().hasRole("ADMIN"))
+                .oauth2Login(oauth2 -> oauth2
+                    .userInfoEndpoint(userInfo -> userInfo
+                        .userService(customOAuth2UserService))
+                    .successHandler(oAuth2LoginSuccessHandler)
+                    .failureHandler(oAuth2LoginFailureHandler))
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .build();
     }

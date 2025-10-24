@@ -84,6 +84,14 @@ public class JWTUtil {
         return role != null ? role : "";
     }
 
+    public String getOAuthProvider(String token) {
+        return validateToken(token).getClaim("oauth_provider").asString();
+    }
+
+    public String getOAuthProviderId(String token) {
+        return validateToken(token).getClaim("oauth_provider_id").asString();
+    }
+
     public void invalidateUserToken(String userId) {
         userTokens.remove(userId);
     }
