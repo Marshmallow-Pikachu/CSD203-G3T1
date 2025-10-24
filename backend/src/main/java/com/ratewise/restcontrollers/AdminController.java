@@ -64,6 +64,8 @@ public class AdminController {
                         .isActive(u.isEnabled())
                         .createdAt(u.getCreatedAt())
                         .role(roleName)
+                        .oauthProvider(u.getOauthProvider())
+                        .oauthProviderId(u.getOauthProviderId())
                         .build();
                 users.add(userResponse);
             });
@@ -100,6 +102,8 @@ public class AdminController {
                 .isActive(user.isEnabled())
                 .createdAt(user.getCreatedAt())
                 .role(user.getRole().getRoleName())
+                .oauthProvider(user.getOauthProvider())
+                .oauthProviderId(user.getOauthProviderId())
                 .build();
 
         return ResponseEntity.ok(response);
@@ -141,6 +145,8 @@ public class AdminController {
                         .username(userOpt.get().getUsername())
                         .email(userOpt.get().getEmail())
                         .newRole(roleOpt.get().getRoleName())
+                        .oauthProvider(userOpt.get().getOauthProvider())
+                        .oauthProviderId(userOpt.get().getOauthProviderId())
                         .note("User must re-login for changes to take effect")
                         .build();
 

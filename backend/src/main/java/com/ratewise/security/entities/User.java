@@ -27,9 +27,14 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String password;
 
+    @Column(name = "oauth_provider")
+    private String oauthProvider;
+
+    @Column(name = "oauth_provider_id")
+    private String oauthProviderId;
 
     @Column(name = "is_active", nullable = false)
     private boolean enabled;

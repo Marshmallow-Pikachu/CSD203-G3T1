@@ -1,6 +1,8 @@
 package com.ratewise.restcontrollers;
 
 import com.ratewise.security.dto.*;
+import com.ratewise.security.oauth2.CustomOAuth2UserService;
+import com.ratewise.security.oauth2.OAuth2LoginSuccessHandler;
 import com.ratewise.services.AuthService;
 import com.ratewise.security.util.JWTUtil;
 import com.ratewise.security.entities.User;
@@ -80,11 +82,15 @@ public class AuthController {
 
         String token = authHeader.substring(7);
         String email = jwtUtil.getEmail(token);
+        String oauthProvider = jwtUtil.getOAuthProvider(token);
+        String oauthProviderId = jwtUtil.getOAuthProviderId(token);
 
         TokenValidationResponse response = TokenValidationResponse.builder()
                 .message("Token valid for : " + email)
                 .email(email)
                 .valid(true)
+                .oauthProvider(oauthProvider)
+                .oauthProviderId(oauthProviderId)
                 .build();
 
         return ResponseEntity.ok(response);

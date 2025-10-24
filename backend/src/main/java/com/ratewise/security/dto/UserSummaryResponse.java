@@ -14,4 +14,6 @@ public class UserSummaryResponse {
     private final Boolean isActive;
     private final LocalDateTime createdAt;
     private final String role;
+    private final String oauthProvider;
+    private final String oauthProviderId;
 }

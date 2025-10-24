@@ -11,5 +11,7 @@ public class RoleUpdateResponse {
     private final String username;
     private final String email;
     private final String newRole;
+    private final String oauthProvider;
+    private final String oauthProviderId;
     private final String note;
 }

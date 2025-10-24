@@ -35,6 +35,8 @@ public class UserRepository {
                     .username(rs.getString("username"))
                     .email(rs.getString("email"))
                     .password(rs.getString("password_hash"))
+                    .oauthProvider(rs.getString("oauth_provider"))
+                    .oauthProviderId(rs.getString("oauth_provider_id"))
                     .enabled(rs.getBoolean("is_active"))
                     .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
                     .build();
@@ -82,8 +84,8 @@ public class UserRepository {
     private User create(User user) {
         String uuid = UUID.randomUUID().toString();
         String sql = """
-            INSERT INTO users (id, username, password_hash, email, is_active, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO users (id, username, password_hash, email, oauth_provider, oauth_provider_id, is_active, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
         LocalDateTime now = LocalDateTime.now();
@@ -93,6 +95,8 @@ public class UserRepository {
             user.getUsername(),
             user.getPassword(),
             user.getEmail(),
+            user.getOauthProvider(),
+            user.getOauthProviderId(),
             user.isEnabled(),
             now
         );
@@ -104,18 +108,20 @@ public class UserRepository {
 
     private User update(User user) {
         String sql = """
-            UPDATE users SET username = ?, password_hash = ?, email = ?, is_active = ?
+            UPDATE users SET username = ?, password_hash = ?, email = ?, oauth_provider = ?, oauth_provider_id = ?, is_active = ?
             WHERE id = ?
             """;
-        
-        jdbcTemplate.update(sql, 
+
+        jdbcTemplate.update(sql,
             user.getUsername(),
-            user.getPassword(), 
-            user.getEmail(), 
-            user.isEnabled(), 
+            user.getPassword(),
+            user.getEmail(),
+            user.getOauthProvider(),
+            user.getOauthProviderId(),
+            user.isEnabled(),
             user.getId()
         );
-        
+
         return user;
     }
 
