@@ -7,4 +7,5 @@ export SPRING_DATASOURCE_USERNAME="dev_sonia"
 export SPRING_DATASOURCE_PASSWORD="Gjk0a4*u"
 
 # Run the Spring Boot application
+kill -9 $(sudo lsof -t -i:8080)
 ./mvnw spring-boot:run

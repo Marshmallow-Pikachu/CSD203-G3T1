@@ -13,7 +13,7 @@ export default function Login() {
 
     try {
       const res = await api.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/session",
         { username, password },
         { headers: { "Content-Type": "application/json" } }
       );
