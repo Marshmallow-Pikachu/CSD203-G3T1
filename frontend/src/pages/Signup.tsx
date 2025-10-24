@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../components/Button";
 import SocialAuthButtons from "../components/SocialAuthButtons";
+import toast from "react-hot-toast";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -29,7 +30,9 @@ export default function Signup() {
       // You can auto-login after signup or redirect to /login
       // Here, we’ll redirect to /login by default
       if (res.status === 201 || res.status === 200) {
-        navigate("/login");
+        toast.success("Signup successful!");
+        setTimeout(() => navigate("/login"), 1500);
+
       }
     } catch (error: any) {
       console.error("Signup failed", error.response?.data || error.message);

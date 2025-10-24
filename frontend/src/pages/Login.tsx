@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../components/Button";
 import SocialAuthButtons from "../components/SocialAuthButtons";
+import { toast } from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,10 +20,11 @@ export default function Login() {
       );
       const token = res.data.accessToken;
       localStorage.setItem("accessToken", token);
-      navigate("/home");
+      toast.success("Login successful!");
+      setTimeout(() => navigate("/home"), 1500);
     } catch (error: any) {
       console.error("Login failed", error.response?.data || error.message);
-      alert("Login failed");
+      toast.error("Login failed. Please check your credentials.");
     }
   };
 
