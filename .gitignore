@@ -50,7 +50,6 @@ build/
 
 # --- Developer Environments ---
 MarcLocalEnvironment.env
-# --- Jeff stupid files ---
 *.DS_Store
 *.LCK*
 run-local.ps1
