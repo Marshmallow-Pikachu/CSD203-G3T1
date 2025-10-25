@@ -76,12 +76,12 @@ export default function Profile() {
             <p className="text-gray-700">
               <strong>Username:</strong> {profile.username}
             </p>
-            <p className="text-gray-700">
+            {/* <p className="text-gray-700">
               <strong>Login Method:</strong>{" "}
               {profile.oauthProvider
                 ? profile.oauthProvider.toUpperCase()
                 : "Email/Password"}
-            </p>
+            </p> */}
           </>
         ) : (
           <p className="text-gray-500">No profile data available</p>

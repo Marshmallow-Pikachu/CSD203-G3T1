@@ -55,3 +55,4 @@ MarcLocalEnvironment.env
 *.LCK*
 run-local.ps1
 src/main/resources/application.properties
+backend/run.sh
