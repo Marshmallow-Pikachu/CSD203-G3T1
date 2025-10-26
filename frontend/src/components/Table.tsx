@@ -3,17 +3,17 @@ import { api } from "../api/client";
 import { useNavigate } from "react-router-dom";
 
 type Tariff = {
-  hs_code: string;
-  hs_description: string;
   exporter_code: string;
   exporter_name: string;
   importer_code: string;
   importer_name: string;
+  importer_customs: string;
+  importer_tax: string;
   agreement_code: string;
   agreement_name: string;
-  rate_percent: number;
-  customs_basis: string;
-  tax_type: string;
+  hs_code: string;
+  hs_description: string; // product
+  rate_percent: number; // tariff rate
   valid_from: string;
 };
 
@@ -24,7 +24,7 @@ export default function Table() {
   const { data, isLoading, error } = useQuery<Tariff[]>({
     queryKey: ["tariffs", "all"],
     queryFn: async () => {
-      const res = await api.get("/api/v1/tariffs/list");
+      const res = await api.get("/api/v1/tariffs/table");
       return res.data as Tariff[];
     },
     staleTime: 30_000,
@@ -52,19 +52,19 @@ export default function Table() {
           </header>
 
           <div className="bg-white rounded-lg border border-slate-200 p-5 overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
               <table className="w-full">
                 <thead className="bg-gray-100 border-b border-slate-500">
                   <tr className="text-base font-semibold text-slate-800">
                     <th className="px-6 py-4 text-left whitespace-nowrap">Exporter</th>
                     <th className="px-6 py-4 text-left whitespace-nowrap">Importer</th>
-                    <th className="px-6 py-4 text-left whitespace-nowrap">Product</th>
                     <th className="px-6 py-4 text-left whitespace-nowrap">HS Code</th>
-                    <th className="px-6 py-4 text-left whitespace-nowrap">Tax Rule</th>
-                    <th className="px-6 py-4 text-left whitespace-nowrap">Agreement</th>
+                    <th className="px-6 py-4 text-left whitespace-nowrap">Product</th>
                     <th className="px-6 py-4 text-left whitespace-nowrap">Rate (%)</th>
-                    <th className="px-6 py-4 text-left whitespace-nowrap">Custom Basis</th>
-                    <th className="px-6 py-4 text-left whitespace-nowrap">Effective Date</th>
+                    <th className="px-6 py-4 text-left whitespace-nowrap">Agreement</th>
+                    <th className="px-6 py-4 text-left whitespace-nowrap">Importer Customs</th>
+                    <th className="px-6 py-4 text-left whitespace-nowrap">Importer Tax</th>
+                    <th className="px-6 py-4 text-left whitespace-nowrap">Valid From</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -77,22 +77,22 @@ export default function Table() {
                         {item.importer_name} ({item.importer_code})
                       </td>
                       <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
-                        {item.hs_description}
-                      </td>
-                      <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
                         {item.hs_code}
                       </td>
                       <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
-                        placeholder
-                      </td>
-                      <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
-                        {item.agreement_name} ({item.agreement_code})
+                        {item.hs_description}
                       </td>
                       <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
                         {item.rate_percent}
                       </td>
                       <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
-                        {item.customs_basis}
+                        {item.agreement_name} ({item.agreement_code})
+                      </td>
+                      <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
+                        {item.importer_customs}
+                      </td>
+                      <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
+                        {item.importer_tax}
                       </td>
                       <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
                         {item.valid_from}

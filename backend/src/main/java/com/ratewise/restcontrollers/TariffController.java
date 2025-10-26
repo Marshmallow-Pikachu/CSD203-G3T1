@@ -7,6 +7,7 @@ import java.util.*;
 
 
 
+
 /**
 * TariffController
 * Provides a lookup endpoint for import duty + VAT/GST.
@@ -39,5 +40,11 @@ public class TariffController {
         @RequestParam(required = false) String exporter,
         @RequestParam(required = false) String agreement) {
     return tariffService.listTariffs(importer, exporter, agreement);
+    }
+
+    // Tariff table listing
+    @GetMapping("/table")
+    public List<Map<String, Object>> listTariffsTable() {
+        return tariffService.listTariffsTable();
     }
 }
