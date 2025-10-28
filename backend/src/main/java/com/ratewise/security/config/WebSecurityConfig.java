@@ -92,10 +92,12 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/v1/health/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/db/**").hasAnyRole("ADMIN", "USER")
 
+                        .requestMatchers(HttpMethod.POST, "/api/v1/calculate/landed-cost").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/tariffs/**").hasAnyRole("ADMIN", "USER")
+
                         // Admin-only endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/countries/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/tariffs/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").hasRole("ADMIN")
 
                         /* Additional Endpoints once countries and tariff endpoints are up
