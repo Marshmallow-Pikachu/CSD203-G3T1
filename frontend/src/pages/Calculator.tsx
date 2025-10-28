@@ -26,6 +26,11 @@ type CalculationResult = {
   hs_code?: string;
   agreement?: string;
   customs_basis?: string;
+  effectiveDate?: string;         // new: single lookup date returned by backend
+  chosenTariff?: {                // new: helpful debug info from service when available
+    rate?: number;
+    source?: string;
+  };
   ok?: boolean;
   error?: string;
   hint?: string;
@@ -49,9 +54,9 @@ function normalizeError(err: any): CalcTransportError {
   const hint: string | null =
     err?.response?.data?.hint ??
     (status === 400
-      ? "Please check your inputs (HS code, countries, dates)."
+      ? "Please check your inputs (HS code, countries, effective date)."
       : status === 404
-      ? "No tariff found for the given HS code/date range."
+      ? "No tariff found for the given HS code/effective date."
       : status === 422
       ? "Some fields are missing or invalid."
       : status && status >= 500
@@ -88,8 +93,8 @@ export default function CalculatorPage() {
             <CalculatorForm
               onCalculating={() => {
                 setIsCalculating(true);
-                setCalculationError(null);   // clear previous error
-                setCalculationResult(null);  // optional: clear previous result
+                setCalculationError(null); // clear previous error
+                setCalculationResult(null); // optional: clear previous result
               }}
               onResult={(data) => {
                 setCalculationResult(data as CalculationResult);
@@ -109,7 +114,7 @@ export default function CalculatorPage() {
             <CalculationResultPanel
               calculationResult={calculationResult}
               isCalculating={isCalculating}
-              calculationError={calculationError} //
+              calculationError={calculationError}
             />
           </div>
         </div>

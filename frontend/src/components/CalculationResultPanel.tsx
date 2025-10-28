@@ -10,6 +10,8 @@ type CalculationResult = {
   hs_code?: string;
   agreement?: string;
   customs_basis?: string;
+  effectiveDate?: string; // show effective date returned by backend
+  chosenTariff?: { rate?: number; source?: string }; // debug info
   ok?: boolean;
   error?: string;
   hint?: string;
@@ -55,10 +57,8 @@ export default function CalculationResultPanel({
       ? calculationResult.total_landed_cost
       : customsValue + duty + tax;
 
-  // Helper to render the transport error (string or object) with message + hint
   const renderTransportError = (err: CalcTransportError) => {
     if (!err) return null;
-
     if (typeof err === "string") {
       return (
         <div className="rounded-lg border border-red-300 bg-red-50 text-red-700 p-3 mb-4">
@@ -66,8 +66,6 @@ export default function CalculationResultPanel({
         </div>
       );
     }
-
-    // object shape with message + optional hint + optional status
     return (
       <div className="rounded-lg border border-red-300 bg-red-50 text-red-700 p-3 mb-4">
         <p className="font-semibold">
@@ -87,7 +85,6 @@ export default function CalculationResultPanel({
     <aside>
       <h3 className="text-2xl font-extrabold mb-4">Calculation Result</h3>
 
-      {/* Loading skeleton */}
       {isCalculating && (
         <div className="animate-pulse space-y-4">
           <div className="h-20 rounded-xl bg-gray-100" />
@@ -97,7 +94,6 @@ export default function CalculationResultPanel({
         </div>
       )}
 
-      {/* Transport / validation errors */}
       {!isCalculating && calculationError && renderTransportError(calculationError)}
 
       {!isCalculating && !calculationError && calculationResult?.ok === false && (
@@ -110,20 +106,17 @@ export default function CalculationResultPanel({
         </div>
       )}
 
-      {/* Empty state */}
       {!isCalculating && !calculationError && !calculationResult && (
         <p className="text-gray-500">
           Fill out the form and click <em>Calculate</em> to see results.
         </p>
       )}
 
-      {/* Results (wireframe style) */}
       {!isCalculating &&
         !calculationError &&
         calculationResult &&
         calculationResult.ok !== false && (
           <div className="space-y-4">
-            {/* Meta chips (origin/dest/hs/agr/basis) */}
             <div className="flex flex-wrap gap-2 text-xs">
               {calculationResult.exporter_input && (
                 <span className="px-2 py-1 rounded-full bg-gray-100 border">
@@ -150,17 +143,19 @@ export default function CalculationResultPanel({
                   Basis: {calculationResult.customs_basis}
                 </span>
               )}
+              {calculationResult.effectiveDate && (
+                <span className="px-2 py-1 rounded-full bg-gray-100 border">
+                  As of: {calculationResult.effectiveDate}
+                </span>
+              )}
             </div>
 
-            {/* Top cards: Duty / VAT */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-xl border p-4">
                 <div className="font-semibold">Import Duty</div>
                 <div className="text-lg">
                   {formatUSD(duty)}{" "}
-                  <span className="text-sm text-gray-500">
-                    ({formatPercent(dutyRate)})
-                  </span>
+                  <span className="text-sm text-gray-500">({formatPercent(dutyRate)})</span>
                 </div>
               </div>
 
@@ -168,25 +163,19 @@ export default function CalculationResultPanel({
                 <div className="font-semibold">VAT / Tax</div>
                 <div className="text-lg">
                   {formatUSD(tax)}{" "}
-                  <span className="text-sm text-gray-500">
-                    ({formatPercent(taxRate)})
-                  </span>
+                  <span className="text-sm text-gray-500">({formatPercent(taxRate)})</span>
                 </div>
               </div>
             </div>
 
-            {/* Middle card: Total duties + taxes */}
             <div className="rounded-xl border p-4">
               <div className="font-semibold">Total Duties + Taxes</div>
               <div className="text-lg">{formatUSD(totalDutiesAndTaxes)}</div>
             </div>
 
-            {/* Big card: Total Landed Cost (breakdown) */}
             <div className="rounded-xl border p-4">
               <div className="font-semibold mb-2">Total Landed Cost</div>
-              <div className="text-2xl font-extrabold">
-                {formatUSD(totalLandedCost)}
-              </div>
+              <div className="text-2xl font-extrabold">{formatUSD(totalLandedCost)}</div>
 
               <div className="mt-3 text-sm text-gray-700 space-y-1">
                 <div className="flex justify-between">
@@ -201,7 +190,12 @@ export default function CalculationResultPanel({
                   <span>Tax</span>
                   <span className="font-medium">{formatUSD(tax)}</span>
                 </div>
-                {/* If you add freight/insurance to the response later, show them here */}
+                {calculationResult.chosenTariff && (
+                  <div className="mt-3 text-xs text-gray-600">
+                    <div>Tariff chosen: {calculationResult.chosenTariff.rate ?? "—"}%</div>
+                    <div className="opacity-80 text-xs">Source: {calculationResult.chosenTariff.source ?? "—"}</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

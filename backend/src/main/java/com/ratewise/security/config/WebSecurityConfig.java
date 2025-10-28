@@ -92,7 +92,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/v1/health/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/db/**").hasAnyRole("ADMIN", "USER")
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/calculate/landed-cost").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/calculator/landed-cost").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/tariffs/**").hasAnyRole("ADMIN", "USER")
 
                         // Admin-only endpoints

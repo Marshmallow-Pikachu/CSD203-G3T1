@@ -9,6 +9,7 @@ import java.sql.Date;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Comparator; // added import
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -192,47 +193,37 @@ public class CalculatorService {
         );
     }
 
-
     /**
-     * Parse "start_date" and "endDate" from the request (format: dd/MM/yyyy) and normalize them:
-     * - If both missing → use today for both.
-     * - If one bound missing → use the other for both (single-day window).
-     * - If start > end → swap them.
+     * Parse "effectiveDate" from the request.
      *
-    */
+     * Rules:
+     * - "effectiveDate" is required for the new API and represents the single exact lookup date.
+     * - Accepted formats: YYYY-MM-DD or DD/MM/YYYY (see DATE_FORMATTERS).
+     * - Returns a DateRange where start == end == effectiveDate.
+     */
     private DateRange parseDateRange(Map<String, Object> req) {
-        LocalDate start = null, end = null;
-
+        LocalDate effective;
         try {
-            start = parseFlexibleDate(req.get("startDate"), "startDate");
-            end   = parseFlexibleDate(req.get("endDate"), "endDate");
+            effective = parseFlexibleDate(req.get("effectiveDate"), "effectiveDate");
         } catch (IllegalArgumentException ex) {
-            // Re-throw so your exception handler / caller can format {message, hint}
             throw ex;
         }
 
-        // If both missing → today
-        if (start == null && end == null) {
-            start = LocalDate.now();
-            end = start;
-        } else if (start == null) {
-            // Only end provided → single-day window
-            start = end;
-        } else if (end == null) {
-            // Only start provided → single-day window
-            end = start;
+        if (effective == null) {
+            throw new IllegalArgumentException(
+                "effectiveDate is required and must be in one of the accepted formats: YYYY-MM-DD or DD/MM/YYYY."
+            );
         }
 
-        // Normalize order
-        if (start.isAfter(end)) {
-            LocalDate t = start; start = end; end = t;
-        }
-
-        return new DateRange(start, end);
+        return new DateRange(effective, effective);
     }
-
     
     /**
+    * Fetch tariff % and tax info for a given trade lane and HS code, and time frame.
+    * Returns: rate %, customs basis (CIF/FOB), tax type, tax rate %.
+    * Called inside calculateLandedCost function later.
+    */
+        /**
     * Fetch tariff % and tax info for a given trade lane and HS code, and time frame.
     * Returns: rate %, customs basis (CIF/FOB), tax type, tax rate %.
     * Called inside calculateLandedCost function later.
@@ -263,9 +254,6 @@ public class CalculatorService {
             AND UPPER(ag.agreement_code) = UPPER(?)
             AND tr.valid_from <= ?
             AND COALESCE(tr.valid_to, CURRENT_DATE) >= ?
-            
-            ORDER BY tr.valid_from DESC
-            LIMIT 1
         """;
 
         var tariffs = jdbc.queryForList(
@@ -282,7 +270,10 @@ public class CalculatorService {
             );
         }
 
-        Map<String, Object> tariffRow = tariffs.get(0);
+        // Choose the tariff row with the lowest rate_percent when multiple applicable rows are present.
+        Map<String, Object> tariffRow = tariffs.stream()
+            .min(Comparator.comparingDouble(r -> ((Number) r.get("rate_percent")).doubleValue()))
+            .orElse(tariffs.get(0));
 
         // Same treatment for tax rules
         String taxSql = """
