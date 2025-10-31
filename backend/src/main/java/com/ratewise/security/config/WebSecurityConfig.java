@@ -96,19 +96,20 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/tariffs/**").hasAnyRole("ADMIN", "USER")
 
                         // Admin-only endpoints
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "api/v1/admin/roles").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,"/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE,"/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/api/v1/admin/tariffs").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/v1/admin/tariffs").hasRole("ADMIN")
                         .requestMatchers("/api/v1/countries/**").hasRole("ADMIN")
-                        .requestMatchers("/api/**").hasRole("ADMIN")
 
-                        /* Additional Endpoints once countries and tariff endpoints are up
+                        /* Additional Endpoints once countries endpoints are up
                          * .requestMatchers(HttpMethod.POST, "/countries").hasRole("ADMIN") // only admins can add entries into country table
                          * .requestMatchers(HttpMethod.DELETE, "/countries").hasRole("ADMIN") // only admins can delete entries from country table
                          * .requestMatchers(HttpMethod.PUT, "/countries").hasRole("ADMIN") // only admins can update country table
                          * .requestMatchers(HttpMethod.GET, "/countries/**").hasAnyRole("ADMIN", "USER") // users and admin can view entries of the country table
-                         * .requestMatchers(HttpMethod.GET, "/tariffs/**").hasAnyRole("ADMIN", "USER")  // users and admin can view entries of the tariff table
-                         * .requestMatchers(HttpMethod.POST, "/tariffs").hasRole("ADMIN") // only admins can add entries into tariff table
-                         * .requestMatchers(HttpMethod.DELETE, "/tariffs").hasRole("ADMIN") // only admins can delete entries from tariff table
-                         * .requestMatchers(HttpMethod.PUT, "/tariffs").hasRole("ADMIN") // only admins can update tariff table
                          */
 
                         // Require authentication for any other request
