@@ -105,13 +105,6 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/v1/admin/tariffs").hasRole("ADMIN")
                         .requestMatchers("/api/v1/countries/**").hasRole("ADMIN")
 
-                        /* Additional Endpoints once countries endpoints are up
-                         * .requestMatchers(HttpMethod.POST, "/countries").hasRole("ADMIN") // only admins can add entries into country table
-                         * .requestMatchers(HttpMethod.DELETE, "/countries").hasRole("ADMIN") // only admins can delete entries from country table
-                         * .requestMatchers(HttpMethod.PUT, "/countries").hasRole("ADMIN") // only admins can update country table
-                         * .requestMatchers(HttpMethod.GET, "/countries/**").hasAnyRole("ADMIN", "USER") // users and admin can view entries of the country table
-                         */
-
                         // Require authentication for any other request
                         .anyRequest().hasRole("ADMIN"))
                 .oauth2Login(oauth2 -> oauth2

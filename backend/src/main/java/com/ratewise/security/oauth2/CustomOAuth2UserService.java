@@ -26,10 +26,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        // Load user info from OAuth2 provider (Google/GitHub)
+        // Load user info from OAuth2 provider (Google)
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        // Get provider name (google, github)
+        // Get provider name (google)
         String provider = userRequest.getClientRegistration().getRegistrationId();
 
         // Process and save/update user in database
@@ -45,15 +45,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String providerId = extractProviderId(oAuth2User, provider);
 
         if (email == null || email.isEmpty()) {
-            // For GitHub, email might be private - throw an error
-            if ("github".equals(provider)) {
-                throw new OAuth2AuthenticationException(
-                    "Email not found. To login with GitHub, you need to either:\n" +
-                    "1. Make your primary email address public in GitHub Settings > Emails, OR\n" +
-                    "2. Add and verify at least one email address in your GitHub account."
-                );
-            }
-
             throw new OAuth2AuthenticationException(
                 "Email not found from OAuth2 provider. Please ensure your email is available."
             );
@@ -113,8 +104,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if ("google".equals(provider)) {
             String name = oAuth2User.getAttribute("name");
             return name != null && !name.isEmpty() ? name : email.split("@")[0];
-        } else if ("github".equals(provider)) {
-            return oAuth2User.getAttribute("login");
         }
         return email.split("@")[0];
     }
@@ -125,9 +114,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private String extractProviderId(OAuth2User oAuth2User, String provider) {
         if ("google".equals(provider)) {
             return oAuth2User.getAttribute("sub");
-        } else if ("github".equals(provider)) {
-            Object id = oAuth2User.getAttribute("id");
-            return id != null ? id.toString() : null;
         }
         return null;
     }
