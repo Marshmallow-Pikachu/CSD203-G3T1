@@ -8,12 +8,14 @@ import {
   Table,
   User,
   LogOut,
+  ChartSpline
 } from "lucide-react";
 
 const navItems = [
   { to: "/home", label: "Dashboard", icon: LayoutGrid },
   { to: "/calculator", label: "Calculator", icon: Calculator },
   { to: "/tariffs", label: "Tariff Table", icon: Table },
+  { to: "/graph", label: "Trends", icon: ChartSpline },
 ];
 
 function classNames(...parts: Array<string | false | null | undefined>) {

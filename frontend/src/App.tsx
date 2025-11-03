@@ -9,6 +9,7 @@ import Signup from "./pages/Signup";
 import { Toaster } from "react-hot-toast";
 import OAuthCallback from "./pages/oauth-callback";
 import Profile from "./pages/Profile";
+import GraphPage from "./pages/GraphPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem("accessToken");
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/calculator" element={<Calculator />} />
           <Route path="/tariffs" element={<Tariffs />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/graph" element={<GraphPage />} />
         </Route>
 
         {/* Catch-all → redirect to login */}
