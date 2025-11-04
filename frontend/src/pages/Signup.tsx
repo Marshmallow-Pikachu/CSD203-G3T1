@@ -106,9 +106,6 @@ export default function Signup() {
           <Button type="submit">Create account</Button>
         </div>
 
-        {/* Social signups (same entry points as social login) */}
-        <SocialAuthButtons />
-
         <p className="text-sm text-center text-gray-600">
           Already have an account?{" "}
           <Link to="/login" className="text-blue-600 hover:underline">
