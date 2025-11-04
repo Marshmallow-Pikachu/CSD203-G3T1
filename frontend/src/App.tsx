@@ -9,6 +9,7 @@ import Signup from "./pages/Signup";
 import { Toaster } from "react-hot-toast";
 import OAuthCallback from "./pages/oauth-callback";
 import Profile from "./pages/Profile";
+import TableAdmin from "./pages/Admin";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem("accessToken");
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/calculator" element={<Calculator />} />
           <Route path="/tariffs" element={<Tariffs />} />
+          <Route path="/admin" element={<TableAdmin />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
 

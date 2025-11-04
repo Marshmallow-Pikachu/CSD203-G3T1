@@ -2,7 +2,6 @@ import { useState } from "react";
 import { api } from "../api/client";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../components/Button";
-import SocialAuthButtons from "../components/SocialAuthButtons";
 import toast from "react-hot-toast";
 
 export default function Signup() {
