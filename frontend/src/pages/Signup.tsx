@@ -8,35 +8,48 @@ import toast from "react-hot-toast";
 export default function Signup() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState(""); 
-  const [confirm, setConfirm]   = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ✅ Email format verification
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    // ✅ Password verification
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      toast.error(
+        "Password must contain at least 1 uppercase, 1 lowercase, 1 number, and be at least 8 characters long."
+      );
+      return;
+    }
+
     if (password !== confirm) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match.");
       return;
     }
 
     try {
-      // TODO: point to your real registration endpoint
       const res = await api.post(
         "/api/v1/auth/registration",
         { username, email, password },
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // You can auto-login after signup or redirect to /login
-      // Here, we’ll redirect to /login by default
       if (res.status === 201 || res.status === 200) {
         toast.success("Signup successful!");
         setTimeout(() => navigate("/login"), 1500);
-
       }
     } catch (error: any) {
       console.error("Signup failed", error.response?.data || error.message);
-      alert("Signup failed");
+      toast.error("Signup failed. Please try again.");
     }
   };
 
@@ -55,7 +68,9 @@ export default function Signup() {
             Username
           </label>
           <input
-            id="username" type="text" value={username}
+            id="username"
+            type="text"
+            value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Choose a username"
             className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -68,12 +83,17 @@ export default function Signup() {
             Email
           </label>
           <input
-            id="email" type="email" value={email}
+            id="email"
+            type="email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Please enter a valid email (e.g. user@example.com)
+          </p>
         </div>
 
         <div className="space-y-1">
@@ -81,12 +101,17 @@ export default function Signup() {
             Password
           </label>
           <input
-            id="password" type="password" value={password}
+            id="password"
+            type="password"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Must include at least 1 uppercase, 1 lowercase, 1 number, and be 8+ characters.
+          </p>
         </div>
 
         <div className="space-y-1">
@@ -94,7 +119,9 @@ export default function Signup() {
             Confirm password
           </label>
           <input
-            id="confirm" type="password" value={confirm}
+            id="confirm"
+            type="password"
+            value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             placeholder="••••••••"
             className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
