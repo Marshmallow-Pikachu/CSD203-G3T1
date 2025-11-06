@@ -24,18 +24,18 @@ public class CalculatorControllerTest {
     private CalculatorController calculatorController;
     
     @Test
-    void calculateLandedCost_shouldOmitNullFieldsIfNull() {
+    void calculateLandedCost_ShouldCallService() {
         // Original Method takes in a calculator request
         CalculatorRequest request = new CalculatorRequest(
             "Singapore",
             "United States",
             "010121",
             "MFN",
-            null, 
-            null,  
-            null,  
-            null,  
-            null   
+            1000.0,
+            2,
+            50.0,
+            100.0,
+            "2025-10-28"
         );
 
         Map<String, Object> expectedResult = new HashMap<>();
