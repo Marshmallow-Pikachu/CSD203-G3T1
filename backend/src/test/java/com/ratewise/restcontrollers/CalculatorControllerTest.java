@@ -14,6 +14,7 @@ import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,7 +55,9 @@ public class CalculatorControllerTest {
 
         verify(calculatorService, times(1)).calculateLandedCost(any());
     }
-    
+
+
+    // Test case with all optional fields null
     @Test
     void calculateLandedCost_ShouldOmitFieldsIfNull() {
         CalculatorRequest request = new CalculatorRequest(
@@ -82,4 +85,36 @@ public class CalculatorControllerTest {
             !payload.containsKey("effectiveDate")
         ));
     }
+
+    // Ensure date is properly added and queried
+    @Test
+    void calculateLandedCost_shouldReflectEffectiveDate_WhenProvided() {
+
+        
+        // test date is "2025-10-28"
+        CalculatorRequest request = new CalculatorRequest(
+            "Singapore",
+            "United States",
+            "010121",
+            "MFN",
+            1000.0,
+            2,
+            50.0,
+            100.0,
+            "2025-10-28"
+        );
+
+        Map<String, Object> mockResult = new HashMap<>();
+        when(calculatorService.calculateLandedCost(any())).thenReturn(mockResult);
+
+        // test the actual controller logic but drop the output
+        calculatorController.calculateLandedCost(request);
+
+        verify(calculatorService).calculateLandedCost(argThat(payload -> 
+            payload.containsKey("effectiveDate") &&
+            payload.get("effectiveDate").equals("2025-10-28")
+        ));
+
+    }
+
 }
