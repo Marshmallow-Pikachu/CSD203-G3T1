@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.TestExecutionListeners;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -23,6 +24,8 @@ public class CalculatorControllerTest {
     @InjectMocks
     private CalculatorController calculatorController;
     
+
+    // ensure that the function calculate landed cost actually calls calculatorService.calculateLandedCost
     @Test
     void calculateLandedCost_ShouldCallService() {
         // Original Method takes in a calculator request
@@ -50,5 +53,33 @@ public class CalculatorControllerTest {
         assertEquals(expectedResult, testResult);
 
         verify(calculatorService, times(1)).calculateLandedCost(any());
+    }
+    
+    @Test
+    void calculateLandedCost_ShouldOmitFieldsIfNull() {
+        CalculatorRequest request = new CalculatorRequest(
+            "Singapore",
+            "United States",
+            "010121",
+            "MFN",
+            null,  
+            null,  
+            null,  
+            null,  
+            null  
+        );
+
+        Map<String, Object> mockResult = new HashMap<>();
+        when(calculatorService.calculateLandedCost(any())).thenReturn(mockResult);
+
+        calculatorController.calculateLandedCost(request);
+
+        verify(calculatorService).calculateLandedCost(argThat(payload ->
+            !payload.containsKey("goodsValue") && 
+            !payload.containsKey("quantity") &&
+            !payload.containsKey("freight") &&
+            !payload.containsKey("insurance") &&
+            !payload.containsKey("effectiveDate")
+        ));
     }
 }
