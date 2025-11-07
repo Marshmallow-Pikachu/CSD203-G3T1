@@ -1,35 +1,41 @@
 import { useState } from "react";
-import { api } from "../api/client";
 import { useNavigate, Link } from "react-router-dom";
+import { api } from "../api/client";
 import Button from "../components/Button";
-import toast from "react-hot-toast";
+import Input from "../components/Input";      
+import { toast } from "react-hot-toast";  
+
+// --- small helpers for readability ---
+const isValidEmail = (v: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+const isStrongPassword = (v: string) =>
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);
 
 export default function Signup() {
   const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const [confirm,  setConfirm]  = useState("");
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Email format verification
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    const u = username.trim();
+    const em = email.trim();
+
+    if (!isValidEmail(em)) {
       toast.error("Please enter a valid email address.");
       return;
     }
-
-    // ✅ Password verification
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (!passwordRegex.test(password)) {
+    if (!isStrongPassword(password)) {
       toast.error(
-        "Password must contain at least 1 uppercase, 1 lowercase, 1 number, and be at least 8 characters long."
+        "Password must be 8+ chars and include 1 uppercase, 1 lowercase, and 1 number."
       );
       return;
     }
-
     if (password !== confirm) {
       toast.error("Passwords do not match.");
       return;
@@ -38,16 +44,16 @@ export default function Signup() {
     try {
       const res = await api.post(
         "/api/v1/auth/registration",
-        { username, email, password },
+        { username: u, email: em, password },
         { headers: { "Content-Type": "application/json" } }
       );
 
       if (res.status === 201 || res.status === 200) {
         toast.success("Signup successful!");
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/login"), 1200);
       }
     } catch (error: any) {
-      console.error("Signup failed", error.response?.data || error.message);
+      console.error("Signup failed", error?.response?.data || error?.message);
       toast.error("Signup failed. Please try again.");
     }
   };
@@ -62,71 +68,50 @@ export default function Signup() {
           Create your account
         </h2>
 
-        <div className="space-y-1">
-          <label htmlFor="username" className="block text-sm font-medium text-gray-600">
-            Username
-          </label>
-          <input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Choose a username"
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            required
-          />
-        </div>
+        <Input
+          id="username"
+          label="Username"
+          value={username}
+          onChange={setUsername}
+          placeholder="Choose a username"
+        />
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-600">
-            Email
-          </label>
-          <input
+        <div>
+          <Input
             id="email"
+            label="Email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={setEmail}
             placeholder="you@example.com"
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            required
           />
           <p className="text-xs text-gray-500 mt-1">
-            Please enter a valid email (e.g. user@example.com)
+            Please enter a valid email (e.g. user@example.com).
           </p>
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-600">
-            Password
-          </label>
-          <input
+        <div>
+          <Input
             id="password"
+            label="Password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             placeholder="••••••••"
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            required
           />
           <p className="text-xs text-gray-500 mt-1">
             Must include at least 1 uppercase, 1 lowercase, 1 number, and be 8+ characters.
           </p>
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="confirm" className="block text-sm font-medium text-gray-600">
-            Confirm password
-          </label>
-          <input
-            id="confirm"
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="••••••••"
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            required
-          />
-        </div>
+        <Input
+          id="confirm"
+          label="Confirm password"
+          type="password"
+          value={confirm}
+          onChange={setConfirm}
+          placeholder="••••••••"
+        />
 
         <div className="flex justify-center">
           <Button type="submit">Create account</Button>

@@ -1,12 +1,12 @@
 // src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import AppLayout from "./components/layouts/AppLayout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Calculator from "./pages/Calculator";
 import Tariffs from "./pages/Tariffs";
 import Signup from "./pages/Signup";
-import { Toaster } from "react-hot-toast";
 import OAuthCallback from "./pages/oauth-callback";
 import Profile from "./pages/Profile";
 import TableAdmin from "./pages/Admin";
