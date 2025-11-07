@@ -38,6 +38,28 @@ class CalculatorServiceIT {
         assertNotNull(result.get("total_landed_cost"));
     }
 
+    // test failing
+    @Test
+    void calculateLandedCost_ShouldReturnCorrectRate_WithDateInFuture() {
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("exporter", "Singapore");
+        request.put("importer", "United States");
+        request.put("hsCode", "010121");
+        request.put("agreement", "MFN");
+        request.put("goods_value", 1000.0);
+        request.put("freight", 50.0);
+        request.put("insurance", 100.0);
+        request.put("effectiveDate", "2026-10-28"); //2026 future
+        
+        Map<String, Object> result = calculatorService.calculateLandedCost(request);
+        
+        assertTrue((Boolean) result.get("ok"));
+        assertEquals(17.76, ((Number) result.get("rate_percent")).doubleValue(), 0.01);
+        assertEquals("FOB", result.get("customs_basis"));
+        assertEquals(1000.0, ((Number) result.get("customs_value")).doubleValue(), 0.01);
+        assertNotNull(result.get("total_landed_cost"));
+    }
+
     @Test
     void calculateLandedCost_ShouldReturnDifferentRates_ForDifferentDates() {
         // Test: Same country pair/HScode/agreement but different dates → different rates
@@ -145,20 +167,26 @@ class CalculatorServiceIT {
     // Note: open-ended rates are only considered valid through today.
 
 
-    // @Test
-    // void calculateLandedCost_ShouldReturnError_WhenInvalidHSCode() {
-    //     Map<String, Object> request = new LinkedHashMap<>();
-    //     request.put("exporter", "Singapore");
-    //     request.put("importer", "United States");
-    //     request.put("hsCode", "999999");  // Non-existent
-    //     request.put("agreement", "MFN");
-    //     request.put("goods_value", 1000.0);
-    //     request.put("effectiveDate", "2025-10-28");
+    @Test
+    void calculateLandedCost_ShouldReturnError_WhenInvalidHSCode() {
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("exporter", "Singapore");
+        request.put("importer", "United States");
+        request.put("hsCode", "999999");  // Non-existent
+        request.put("agreement", "MFN");
+        request.put("goods_value", 1000.0);
+        request.put("effectiveDate", "2025-10-28");
         
-    //     Map<String, Object> result = calculatorService.calculateLandedCost(request);
-        
-    //     assertFalse((Boolean) result.get("ok"));
-    // }
+        // Map<String, Object> result = calculatorService.calculateLandedCost(request);
+            
+        IllegalStateException exception = assertThrows(
+            IllegalStateException.class,
+            () -> calculatorService.calculateLandedCost(request),
+            "Should throw IllegalStateException for invalid HS code"
+        );
+        assertTrue(exception.getMessage().contains("No tariff rate found"));
+        assertTrue(exception.getMessage().contains("HS"));
+    }
 
     @Test
     void calculateLandedCost_ShouldReturnError_WhenAgreementMissing() {
