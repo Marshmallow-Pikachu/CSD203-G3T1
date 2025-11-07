@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import TariffForm from "./TariffForm";
 import { Modal, Th, Td } from "./TableAdminComponents";
-/* ========= Types from list endpoint ========= */
+
 export type Tariff = {
   id: string | number;
   exporter_code: string;
@@ -35,18 +35,11 @@ export default function TableAdmin() {
     retry: 1,
   });
 
-  // Keep id (id or tariffId) and flatten for the table
+  // Store Row Details
 const rows = useMemo(() => {
   return (data ?? []).map((t) => {
-    // pick up id no matter how backend names it
-    const id =
-      (t as any).id ??
-      (t as any).tariffId ??
-      (t as any).tariff_id ??
-      undefined;
-
     return {
-      id,
+      id: t.id,
       exporter: `${t.exporter_name} (${t.exporter_code})`,
       exporterCode: t.exporter_code,
       importer: `${t.importer_name} (${t.importer_code})`,
