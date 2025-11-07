@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
-
+import TariffForm from "./TariffForm";
+import { Modal, Th, Td } from "./TableAdminComponents";
 /* ========= Types from list endpoint ========= */
 export type Tariff = {
-  id?: string | number;            // if API returns id
-  tariffId?: string | number;      // if API returns tariffId
+  id: string | number;
   exporter_code: string;
   exporter_name: string;
   importer_code: string;
@@ -21,32 +21,6 @@ export type Tariff = {
   valid_to: string | null;
 };
 
-/* ========= Small helpers ========= */
-const fmtRate = (n: number | null | undefined) =>
-  typeof n === "number" ? n.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
-
-const fmtDate = (iso: string | null | undefined) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "2-digit" }).format(d);
-};
-
-/* ========= Admin API payloads ========= */
-/** NOTE: Create does NOT include id */
-type CreateTariffPayload = {
-  exporterCode: string;
-  importerCode: string;
-  hsCode: string;
-  agreementCode: string;
-  ratePercent: number;
-  validFrom: string;        // YYYY-MM-DD
-  validTo: string | null;   // YYYY-MM-DD or null
-};
-/** Update uses the same payload, id goes in the URL */
-type UpdateTariffPayload = CreateTariffPayload;
-
-/* ========= Page ========= */
 export default function TableAdmin() {
   const queryClient = useQueryClient();
 
@@ -94,10 +68,10 @@ const rows = useMemo(() => {
 
   // Create
   const createMutation = useMutation({
-    mutationFn: async (payload: CreateTariffPayload) => {
+    mutationFn: async (payload) => {
       // (debug) show request
       alert(
-        "📤 Sending HTTP Request:\n\n" +
+        "Sending HTTP Request:\n\n" +
           "POST /api/v1/admin/tariffs\n\n" +
           "Headers: { Content-Type: application/json }\n\n" +
           "Body:\n" +
@@ -106,7 +80,7 @@ const rows = useMemo(() => {
       const res = await api.post("/api/v1/admin/tariffs", payload, {
         headers: { "Content-Type": "application/json" },
       });
-      alert("✅ Tariff Created:\n\n" + JSON.stringify(res.data, null, 2));
+      alert("Tariff Created:\n\n" + JSON.stringify(res.data, null, 2));
       return res.data;
     },
     onSuccess: () => {
@@ -114,13 +88,13 @@ const rows = useMemo(() => {
       setCreateOpen(false);
     },
     onError: (err: any) => {
-      alert("❌ Error while creating tariff:\n\n" + (err?.message || JSON.stringify(err)));
+      alert("Error while creating tariff:\n\n" + (err?.message || JSON.stringify(err)));
     },
   });
 
   // Update
   const updateMutation = useMutation({
-    mutationFn: async ({ id, payload }: { id: string | number; payload: UpdateTariffPayload }) => {
+    mutationFn: async ({ id, payload }: any) => {
       const res = await api.put(`/api/v1/admin/tariffs/${id}`, payload, {
         headers: { "Content-Type": "application/json" },
       });
@@ -132,7 +106,7 @@ const rows = useMemo(() => {
       setEditing(null);
     },
     onError: (err: any) => {
-      alert("❌ Error while updating tariff:\n\n" + (err?.message || JSON.stringify(err)));
+      alert("Error while updating tariff:\n\n" + (err?.message || JSON.stringify(err)));
     },
   });
 
@@ -146,7 +120,7 @@ const rows = useMemo(() => {
       queryClient.invalidateQueries({ queryKey: ["tariffs", "all"] });
     },
     onError: (err: any) => {
-      alert("❌ Error while deleting tariff:\n\n" + (err?.message || JSON.stringify(err)));
+      alert("Error while deleting tariff:\n\n" + (err?.message || JSON.stringify(err)));
     },
   });
 
@@ -242,17 +216,8 @@ const rows = useMemo(() => {
         <header className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-800">Tariff Table</h1>
           <div className="flex gap-3">
-            <button
-              onClick={startCreate}
-              className="rounded-md bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700"
-            >
-              Add Tariff
-            </button>
-            <button
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50"
-            >
+            <button onClick={startCreate} className="rounded-md bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700">Add Tariff</button>
+            <button onClick={() => refetch()} disabled={isFetching} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">
               {isFetching ? "Refreshing…" : "Refresh"}
             </button>
           </div>
@@ -270,8 +235,8 @@ const rows = useMemo(() => {
                   <Th label="Product" />
                   <Th label="Rate (%)" />
                   <Th label="Agreement" />
-                  <Th label="Importer Customs" />
-                  <Th label="Importer Tax" />
+                  {/* <Th label="Importer Customs" />
+                  <Th label="Importer Tax" /> */}
                   <Th label="Valid From" />
                   <Th label="Valid To" />
                   <Th label="Actions" />
@@ -296,12 +261,10 @@ const rows = useMemo(() => {
                       <Td>{r.importer}</Td>
                       <Td mono>{r.hs_code}</Td>
                       <Td>{r.product}</Td>
-                      <Td mono>{fmtRate(r.rate_percent)}</Td>
+                      <Td mono>{(r.rate_percent)}</Td>
                       <Td>{r.agreement}</Td>
-                      <Td>{r.importer_customs}</Td>
-                      <Td>{r.importer_tax}</Td>
-                      <Td mono>{fmtDate(r.valid_from)}</Td>
-                      <Td mono>{fmtDate(r.valid_to)}</Td>
+                      <Td mono>{(r.valid_from)}</Td>
+                      <Td mono>{(r.valid_to)}</Td>
                       <Td>
                         <div className="flex gap-2">
                           <button
@@ -359,184 +322,4 @@ const rows = useMemo(() => {
   );
 }
 
-/* ========= Form ========= */
-function TariffForm({
-  initial,
-  onSubmit,
-  submitting,
-}: {
-  initial?: CreateTariffPayload;
-  onSubmit: (p: CreateTariffPayload) => void;
-  submitting?: boolean;
-}) {
-  const [form, setForm] = useState<CreateTariffPayload>(
-    initial ?? {
-      exporterCode: "",
-      importerCode: "",
-      hsCode: "",
-      agreementCode: "",
-      ratePercent: 0,
-      validFrom: "",
-      validTo: null,
-    }
-  );
 
-  const update = (k: keyof CreateTariffPayload, v: any) =>
-    setForm((s) => ({ ...s, [k]: v }));
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      ...form,
-      ratePercent: Number(form.ratePercent),
-      validTo: form.validTo === "" ? null : form.validTo,
-    });
-  };
-
-  return (
-    <form onSubmit={submit} className="space-y-3">
-      <Row>
-        <Field
-          label="Exporter Code"
-          value={form.exporterCode}
-          onChange={(e) => update("exporterCode", e.target.value)}
-          placeholder="e.g., SG, AU"
-          required
-        />
-        <Field
-          label="Importer Code"
-          value={form.importerCode}
-          onChange={(e) => update("importerCode", e.target.value)}
-          placeholder="e.g., JP, SG"
-          required
-        />
-      </Row>
-
-      <Row>
-        <Field
-          label="HS Code"
-          value={form.hsCode}
-          onChange={(e) => update("hsCode", e.target.value)}
-          placeholder="e.g., 847130"
-          required
-        />
-        <Field
-          label="Agreement Code"
-          value={form.agreementCode}
-          onChange={(e) => update("agreementCode", e.target.value)}
-          placeholder="e.g., AANZFTA"
-          required
-        />
-      </Row>
-
-      <Row>
-        <Field
-          label="Rate Percent"
-          type="number"
-          step="0.01"
-          value={form.ratePercent}
-          onChange={(e) => update("ratePercent", e.target.value)}
-          placeholder="e.g., 2.5"
-          required
-        />
-        <Field
-          label="Valid From"
-          type="date"
-          value={form.validFrom}
-          onChange={(e) => update("validFrom", e.target.value)}
-          required
-        />
-        <Field
-          label="Valid To"
-          type="date"
-          value={form.validTo ?? ""}
-          onChange={(e) => update("validTo", e.target.value)}
-        />
-      </Row>
-
-      <div className="flex justify-end gap-2 pt-2">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-md bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-        >
-          {submitting ? "Saving…" : "Save"}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-/* ========= Presentational helpers ========= */
-function Th({ label }: { label: string }) {
-  return (
-    <th scope="col" className="px-6 py-3 text-left whitespace-nowrap select-none">
-      {label}
-    </th>
-  );
-}
-
-function Td({ children, mono = false }: { children: React.ReactNode; mono?: boolean }) {
-  return <td className={`px-6 py-3 text-left whitespace-nowrap ${mono ? "font-mono" : ""}`}>{children}</td>;
-}
-
-function Row({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{children}</div>;
-}
-
-function Field({
-  label,
-  type = "text",
-  value,
-  onChange,
-  placeholder,
-  required,
-  step,
-}: {
-  label: string;
-  type?: string;
-  value: any;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-  required?: boolean;
-  step?: string;
-}) {
-  return (
-    <label className="block text-sm">
-      <span className="block text-slate-600 mb-1">{label}</span>
-      <input
-        type={type}
-        step={step}
-        value={value ?? ""}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </label>
-  );
-}
-
-function Modal({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
-          <button onClick={onClose} className="rounded-md border px-2 py-1 text-sm hover:bg-slate-50">
-            Close
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
