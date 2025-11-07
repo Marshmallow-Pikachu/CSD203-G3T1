@@ -54,24 +54,28 @@ export default function CalculatorForm({
 
   // Ensure date string (from <input type="date">) is normalized to yyyy-MM-dd
   const normalizeDateInput = (d?: string) => {
+    // input type="date" already gives 'YYYY-MM-DD' in most browsers; just sanity-check it
     if (!d) return undefined;
-    // browsers already provide yyyy-MM-dd, but normalize anyway
-    const dt = new Date(d);
-    if (Number.isNaN(dt.getTime())) return undefined;
-    return dt.toISOString().slice(0, 10);
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d.trim());
+    return m ? `${m[1]}-${m[2]}-${m[3]}` : undefined;
   };
 
   const submit = (raw: CalculateFields) => {
+    // helpers
+    const s = (x?: string) => (x && x.trim() !== "" ? x.trim() : undefined);
+
+    const hs = s(raw.hsCode);
     const payload: any = {
-      exporter: raw.exporter,
-      importer: raw.importer,
-      hsCode: raw.hsCode,
-      agreement: raw.agreement,
-      goods_value: Number(raw.goods_value),
-      quantity: Number(raw.quantity),
-      freight: Number(raw.freight),
-      insurance: Number(raw.insurance),
-      productDescription: raw.productDescription || undefined,
+      exporter: s(raw.exporter),
+      importer: s(raw.importer),
+      agreement: s(raw.agreement) ?? "MFN",
+      hsCode: hs,s,
+      // only send productDescription if hsCode is missing
+      productDescription: hs ? undefined : s(raw.productDescription),
+      goods_value: Number.isFinite(raw.goods_value) ? Number(raw.goods_value) : 0,
+      quantity: Number.isFinite(raw.quantity) ? Number(raw.quantity) : 1,
+      freight: Number.isFinite(raw.freight) ? Number(raw.freight) : 0,
+      insurance: Number.isFinite(raw.insurance) ? Number(raw.insurance) : 0,
     };
 
     const eff = normalizeDateInput(raw.effectiveDate);
