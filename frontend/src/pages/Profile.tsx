@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import { handleLogout } from "../api/user";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import { toast } from "react-hot-toast";
 
 interface UserProfile {
   username: string;
-  oauthProvider?: string | null;
 }
 
 export default function Profile() {
@@ -44,19 +44,19 @@ export default function Profile() {
     fetchProfile();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    try {
-      await api.delete("/api/v1/auth/session", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (e) {
-      console.warn("Logout request failed, clearing token anyway");
-    } finally {
-      localStorage.removeItem("accessToken");
-      toast.success("Logged out successfully");
-      navigate("/login");
-    }
-  };
+  // const handleLogout = async () => {
+  //   try {
+  //     await api.delete("/api/v1/auth/session", {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //   } catch (e) {
+  //     console.warn("Logout request failed, clearing token anyway");
+  //   } finally {
+  //     localStorage.removeItem("accessToken");
+  //     toast.success("Logged out successfully");
+  //     navigate("/login");
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -76,12 +76,6 @@ export default function Profile() {
             <p className="text-gray-700">
               <strong>Username:</strong> {profile.username}
             </p>
-            {/* <p className="text-gray-700">
-              <strong>Login Method:</strong>{" "}
-              {profile.oauthProvider
-                ? profile.oauthProvider.toUpperCase()
-                : "Email/Password"}
-            </p> */}
           </>
         ) : (
           <p className="text-gray-500">No profile data available</p>
@@ -99,7 +93,9 @@ export default function Profile() {
         )}
 
         <div className="pt-4">
-          <Button onClick={handleLogout}>Logout</Button>
+        <Button onClick={() => handleLogout(token, navigate)}>
+          Logout
+        </Button>
         </div>
       </div>
     </div>
