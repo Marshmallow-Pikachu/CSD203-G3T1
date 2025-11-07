@@ -1,111 +1,197 @@
-@baseUrl = http://localhost:8080
+@BASE_URL = http://localhost:8080
+@JWT = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZGRhZDNmZC1mZjhmLTRmNDQtODJmNS0xYzIwYWI1NGM1OTYiLCJpYXQiOjE3NjI0OTI4ODgsImV4cCI6MTc2MjU3OTI4OCwidXNlcm5hbWUiOiJuZXdhZG1pbjEiLCJlbWFpbCI6Im5ld2FkbWluMUBnbWFpbC5jb20iLCJyb2xlIjoiQURNSU4ifQ.D9xm7iAe9sELesh2rDmXErwSsIMvnytN2TXIdCAkECE
 
 # Azure deployed backend (when app is live on Azure App Service)
 # @{{baseUrl}} = https://csd-asssignment-g3-1.azurewebsites.net
 
 
-### 1) Happy path (MFN, dates overlap)
-POST {{baseUrl}}/api/v1/calculate/landed-cost
+### 1.1 SG → CN (CIF), Coffee 090111, MFN
+POST {{BASE_URL}}/api/v1/calculator/landed-cost
+Authorization: Bearer {{JWT}}
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
 
 {
-  "exporter": "Singapore",
-  "importer": "United States",
-  "hsCode": "010121",
-  "agreement": "MFN",
-  "goods_value": 1000,
-  "quantity": 2,
-  "freight": 50,
-  "insurance": 100,
-  "start_date": "01/09/2025",
-  "end_date": "30/09/2025"
-}
-
-###
-
-### 2) Only one date provided (should be treated as single-day window)
-POST {{baseUrl}}/api/v1/calculate/landed-cost
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
-
-{
+  "hsCode": "090111",
   "exporter": "SG",
-  "importer": "US",
-  "hsCode": "010121",
-  "agreement": "MFN",
-  "goods_value": 500,
-  "quantity": 1,
-  "start_date": "15/09/2025"
-}
-
-###
-
-### 3) Swapped dates (service should auto-correct)
-POST {{baseUrl}}/api/v1/calculate/landed-cost
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
-
-{
-  "exporter": "Singapore",
-  "importer": "United States",
-  "hsCode": "010121",
-  "agreement": "MFN",
-  "goods_value": 750,
-  "quantity": 3,
-  "freight": 25,
-  "insurance": 0,
-  "start_date": "30/09/2025",
-  "end_date": "01/09/2025"
-}
-
-###
-
-### 4) Invalid country (lenient UX: returns JSON with error, ok=false)
-POST {{baseUrl}}/api/v1/calculate/landed-cost
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
-
-{
-  "exporter": "Singapure",  
-  "importer": "United States",
-  "hsCode": "010121",
-  "agreement": "MFN",
-  "goods_value": 1000,
-  "quantity": 1,
-  "start_date": "01/09/2025",
-  "end_date": "30/09/2025"
-}
-
-###
-
-### 5) Missing dates (defaults to today for both)
-POST {{baseUrl}}/api/v1/calculate/landed-cost
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
-
-
-{
-  "exporter": "SG",
-  "importer": "US",
-  "hsCode": "010121",
+  "importer": "CN",
   "agreement": "MFN",
   "goods_value": 1200,
-  "quantity": 2
+  "freight": 150,
+  "insurance": 30,
+  "effectiveDate": "2025-03-15"
 }
 
-### 6) No tariffs available for the time frame (expect 500 from service today)
-POST {{baseUrl}}/api/v1/calculate/landed-cost
+### 1.2 SG → US (FOB), Coffee 090111, MFN — freight/insurance should be ignored for FOB lanes
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsImlhdCI6MTc1ODgxOTYwMiwiZXhwIjoxNzU4OTA2MDAyLCJlbWFpbCI6Im1hcmNsaW0xMkBleGFtcGxlLmNvbSJ9.v8spcXzOX01YMgyKya74toJP-BQ6YDyR7u0K6C9CvWM
 
 {
-  "exporter": "Singapore",
-  "importer": "United States",
-  "hsCode": "010121",
+  "hsCode": "090111",
+  "exporter": "SG",
+  "importer": "US",
+  "agreement": "MFN",
+  "goods_value": 1200,
+  "freight": 150,
+  "insurance": 30,
+  "effectiveDate": "2025-03-15"
+}
+
+### 1.3 SG → JP (CIF), Coffee 090111, CPTPP vs MFN (preferential comparison)
+# CPTPP
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "090111",
+  "exporter": "SG",
+  "importer": "JP",
+  "agreement": "CPTPP",
+  "goods_value": 1200,
+  "freight": 150,
+  "insurance": 30,
+  "effectiveDate": "2025-03-15"
+}
+
+# MFN
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "090111",
+  "exporter": "SG",
+  "importer": "JP",
+  "agreement": "MFN",
+  "goods_value": 1200,
+  "freight": 150,
+  "insurance": 30,
+  "effectiveDate": "2025-03-15"
+}
+
+### 1.4 Resolve via description (Coffee, not roasted)
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "productDescription": "Coffee, not roasted",
+  "exporter": "SG",
+  "importer": "CN",
   "agreement": "MFN",
   "goods_value": 1000,
-  "quantity": 1,
-  "start_date": "01/01/1900",
-  "end_date":   "31/01/1900"
+  "freight": 100,
+  "insurance": 0,
+  "effectiveDate": "2025-07-01"
+}
+
+### 1.5 HS & codes with spaces / lowercase → normalized
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": " 09 01 11 ",
+  "exporter": "sg",
+  "importer": "jp",
+  "agreement": "mfn",
+  "goods_value": 500,
+  "freight": 50,
+  "insurance": 0,
+  "effectiveDate": "2025-06-01"
+}
+
+### 5) Validation & error paths
+
+# 5.1 Missing goods_value
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "090111",
+  "exporter": "SG",
+  "importer": "CN",
+  "agreement": "MFN"
+}
+
+# 5.2 Negative numbers (should be rejected)
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "090111",
+  "exporter": "SG",
+  "importer": "CN",
+  "agreement": "MFN",
+  "goods_value": -1,
+  "freight": 0,
+  "insurance": 0
+}
+
+# 5.3 Missing/blank agreement
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "090111",
+  "exporter": "SG",
+  "importer": "CN",
+  "goods_value": 1000
+}
+
+# 5.4 Date before validity (no 2025+ rate expected)
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "090111",
+  "exporter": "SG",
+  "importer": "CN",
+  "agreement": "MFN",
+  "goods_value": 1000,
+  "effectiveDate": "2024-12-31"
+}
+
+# 5.5 Agreement not applicable (CPTPP on SG→US)
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "090111",
+  "exporter": "SG",
+  "importer": "US",
+  "agreement": "CPTPP",
+  "goods_value": 1000
+}
+
+# 5.6 Unsupported lane (JP exporter not seeded)
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "090111",
+  "exporter": "JP",
+  "importer": "CN",
+  "agreement": "MFN",
+  "goods_value": 900
+}
+
+# 5.7 Unknown HS code
+POST {{BASE_URL}}/api/v1/calculate/landed-cost
+Authorization: Bearer {{JWT}}
+Content-Type: application/json
+
+{
+  "hsCode": "999999",
+  "exporter": "SG",
+  "importer": "CN",
+  "agreement": "MFN",
+  "goods_value": 1000
 }
