@@ -236,25 +236,24 @@ public class CalculatorService {
         Date sqlStart = Date.valueOf(startDate);
         Date sqlEnd   = Date.valueOf(endDate);
 
-        // Treat NULL valid_to as "valid through CURRENT_DATE" (not infinite)
+        // Treat NULL valid_to as "valid through infinite"
         String tariffSql = """
             SELECT tr.rate_percent,
                 ic.customs_basis,
                 ic.id AS importer_id
             FROM tariff_rates tr
-
             JOIN hs_codes   hc ON hc.id = tr.hs_code_id
             JOIN countries  ec ON ec.id = tr.exporter_id
             JOIN countries  ic ON ic.id = tr.importer_id
             JOIN agreements ag ON ag.id = tr.agreement_id
-
             WHERE UPPER(ec.country_code) = UPPER(?)
             AND UPPER(ic.country_code) = UPPER(?)
-            AND UPPER(hc.hs_code) = UPPER(?)
+            AND UPPER(hc.hs_code)      = UPPER(?)
             AND UPPER(ag.agreement_code) = UPPER(?)
             AND tr.valid_from <= ?
-            AND COALESCE(tr.valid_to, CURRENT_DATE) >= ?
+            AND COALESCE(tr.valid_to, DATE '9999-12-31') >= ?
         """;
+
 
         var tariffs = jdbc.queryForList(
             tariffSql,
@@ -275,14 +274,13 @@ public class CalculatorService {
             .min(Comparator.comparingDouble(r -> ((Number) r.get("rate_percent")).doubleValue()))
             .orElse(tariffs.get(0));
 
-        // Same treatment for tax rules
+        
         String taxSql = """
-            SELECT tr.tax_type,
-                tr.rate_percent
+            SELECT tr.tax_type, tr.rate_percent
             FROM tax_rules tr
             WHERE tr.country_id = ?
             AND tr.valid_from <= ?
-            AND COALESCE(tr.valid_to, CURRENT_DATE) >= ?
+            AND COALESCE(tr.valid_to, DATE '9999-12-31') >= ?
             ORDER BY tr.valid_from DESC
             LIMIT 1
         """;

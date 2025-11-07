@@ -60,6 +60,7 @@ public class CalculatorController {
         payload.put("exporter", request.exporter());
         payload.put("importer", request.importer());
         payload.put("hsCode", request.hsCode());
+        payload.put("productDescription", request.productDescription());
         payload.put("agreement", request.agreement());
         if (request.goodsValue() != null) payload.put("goods_value", request.goodsValue());
         if (request.quantity() != null) payload.put("quantity", request.quantity());
