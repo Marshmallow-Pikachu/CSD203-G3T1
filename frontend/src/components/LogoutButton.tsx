@@ -1,19 +1,12 @@
 import Button from "./Button";
 import { useNavigate } from "react-router-dom";
-
+import {handleLogout} from "../api/user";
 
 export default function LogoutButton(){
-
     const navigate = useNavigate();
-
-    const handleLogout = () => {
-    localStorage.removeItem("accessToken"); // Clear JWT
-    navigate("/login"); // redirect to login
-  };
-
     return(
-        <form onSubmit={handleLogout}>
-            <Button type="submit"> Logout </Button>
-        </form>
+        <Button onClick={() => handleLogout(localStorage.getItem("accessToken"), navigate)}>
+          Logout
+        </Button>
     )
 }
