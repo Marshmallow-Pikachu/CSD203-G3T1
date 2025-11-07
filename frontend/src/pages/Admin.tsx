@@ -1,4 +1,3 @@
-// src/pages/Tariffs.tsx
 import TableAdmin from "../components/TableAdmin";
 
 export default function Admin() {

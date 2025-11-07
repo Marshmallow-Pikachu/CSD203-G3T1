@@ -12,7 +12,7 @@ export default function Tariffs() {
         <Table />
       </div>
 
-      {/* Bottom: Query (hard-coded to US inside the component) */}
+      {/* Bottom: Query */}
       <div className="rounded-xl border border-gray-200 p-3">
         <Query />
       </div>
