@@ -100,11 +100,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
      * Determine which OAuth provider was used based on available attributes
      */
     private String determineProvider(OAuth2User oAuth2User) {
-        // Google uses "sub" attribute, GitHub uses "id" attribute
+        // Google uses "sub" attribute
         if (oAuth2User.getAttribute("sub") != null) {
             return "google";
-        } else if (oAuth2User.getAttribute("id") != null) {
-            return "github";
         }
         throw new RuntimeException("Unknown OAuth provider");
     }
@@ -122,8 +120,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private String extractName(OAuth2User oAuth2User, String provider) {
         if ("google".equals(provider)) {
             return oAuth2User.getAttribute("name");
-        } else if ("github".equals(provider)) {
-            return oAuth2User.getAttribute("name");
         }
         return null;
     }
@@ -136,9 +132,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             // Google: use name if available, otherwise derive from email
             String name = oAuth2User.getAttribute("name");
             return name != null && !name.isEmpty() ? name : email.split("@")[0];
-        } else if ("github".equals(provider)) {
-            // GitHub: use the "login" field directly as username
-            return oAuth2User.getAttribute("login");
         }
         return email.split("@")[0];
     }
@@ -149,9 +142,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private String extractProviderId(OAuth2User oAuth2User, String provider) {
         if ("google".equals(provider)) {
             return oAuth2User.getAttribute("sub");
-        } else if ("github".equals(provider)) {
-            Object id = oAuth2User.getAttribute("id");
-            return id != null ? id.toString() : null;
         }
         return null;
     }

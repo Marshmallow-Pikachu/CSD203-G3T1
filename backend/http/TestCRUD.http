@@ -1,0 +1,52 @@
+# Tariff Admin CRUD HTTP tests (VS Code REST Client / similar)
+# Set variables in your REST client environment:
+#   - baseUrl (e.g. http://localhost:8080)
+#   - adminToken (Bearer token for an ADMIN user)
+
+@baseUrl = http://localhost:8080
+
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZGRhZDNmZC1mZjhmLTRmNDQtODJmNS0xYzIwYWI1NGM1OTYiLCJpYXQiOjE3NjE2NDMyNzQsImV4cCI6MTc2MTcyOTY3NCwidXNlcm5hbWUiOiJuZXdhZG1pbjEiLCJlbWFpbCI6Im5ld2FkbWluMUBnbWFpbC5jb20iLCJyb2xlIjoiQURNSU4ifQ.8nj5xjtfFJ7R_C1iv9VoJ2TBDBcGYaGyLRC--XfbRqs
+@tariffId = 4444
+### Create tariff (ADMIN)
+POST {{baseUrl}}/api/v1/admin/tariffs
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "exporterCode": "AU",
+  "importerCode": "SG",
+  "hsCode": "847130",
+  "agreementCode": "AANZFTA",
+  "ratePercent": 2.5,
+  "validFrom": "2025-01-01",
+  "validTo": null
+}
+
+
+### List all tariffs (ADMIN)
+GET {{baseUrl}}/api/v1/admin/tariffs
+Authorization: Bearer {{adminToken}}
+
+### Get created tariff by id (ADMIN)
+# Replace {{tariffId}} with the id returned from the Create response
+GET {{baseUrl}}/api/v1/admin/tariffs/{{tariffId}}
+Authorization: Bearer {{adminToken}}
+
+### Update tariff (ADMIN)
+PUT {{baseUrl}}/api/v1/admin/tariffs/{{tariffId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "exporterCode": "AU",
+  "importerCode": "SG",
+  "hsCode": "847130",
+  "agreementCode": "AANZFTA",
+  "ratePercent": 2.50,
+  "validFrom": "2025-01-01",
+  "validTo": "2026-12-31"
+}
+
+### Delete tariff (ADMIN)
+DELETE {{baseUrl}}/api/v1/admin/tariffs/{{tariffId}}
+Authorization: Bearer {{adminToken}}

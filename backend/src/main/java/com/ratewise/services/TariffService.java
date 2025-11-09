@@ -99,49 +99,51 @@ public class TariffService {
    * Returns a list of tariff rows (HS code, description, exporter/importer, agreement, duty rate, basis).
    */
   public List<Map<String, Object>> listTariffs(String importer, String exporter, String agreement) {
-    StringBuilder sql = new StringBuilder("""
-            SELECT hs_codes.hs_code,
-                   hs_codes.description AS hs_description,
-                   exporter_country.country_code AS exporter_code,
-                   exporter_country.country_name AS exporter_name,
-                   importer_country.country_code AS importer_code,
-                   importer_country.country_name AS importer_name,
-                   agreements.agreement_code,
-                   agreements.agreement_name,
-                   tariff_rates.rate_percent,
-                   importer_country.customs_basis
-            FROM tariff_rates
-            JOIN hs_codes
-              ON hs_codes.id = tariff_rates.hs_code_id
-            JOIN countries AS exporter_country
-              ON exporter_country.id = tariff_rates.exporter_id
-            JOIN countries AS importer_country
-              ON importer_country.id = tariff_rates.importer_id
-            JOIN agreements
-              ON agreements.id = tariff_rates.agreement_id
-            WHERE (tariff_rates.valid_to IS NULL OR tariff_rates.valid_to >= CURRENT_DATE)
-        """);
+      StringBuilder sql = new StringBuilder("""
+              SELECT hs_codes.hs_code,
+                    hs_codes.description AS hs_description,
+                    exporter_country.country_code AS exporter_code,
+                    exporter_country.country_name AS exporter_name,
+                    importer_country.country_code AS importer_code,
+                    importer_country.country_name AS importer_name,
+                    agreements.agreement_code,
+                    agreements.agreement_name,
+                    tariff_rates.rate_percent,
+                    importer_country.customs_basis,
+                    tariff_rates.valid_from AS valid_from,
+                    tariff_rates.valid_to   AS valid_to
+              FROM tariff_rates
+              JOIN hs_codes
+                ON hs_codes.id = tariff_rates.hs_code_id
+              JOIN countries AS exporter_country
+                ON exporter_country.id = tariff_rates.exporter_id
+              JOIN countries AS importer_country
+                ON importer_country.id = tariff_rates.importer_id
+              JOIN agreements
+                ON agreements.id = tariff_rates.agreement_id
+              WHERE (tariff_rates.valid_to IS NULL OR tariff_rates.valid_to >= CURRENT_DATE)
+          """);
 
-    List<Object> params = new ArrayList<>();
+      List<Object> params = new ArrayList<>();
 
-    if (importer != null && !importer.isEmpty()) {
-      sql.append(" AND importer_country.country_code = ?");
-      params.add(importer);
-    }
+      if (importer != null && !importer.isEmpty()) {
+          sql.append(" AND importer_country.country_code = ?");
+          params.add(importer);
+      }
 
-    if (exporter != null && !exporter.isEmpty()) {
-      sql.append(" AND exporter_country.country_code = ?");
-      params.add(exporter);
-    }
+      if (exporter != null && !exporter.isEmpty()) {
+          sql.append(" AND exporter_country.country_code = ?");
+          params.add(exporter);
+      }
 
-    if (agreement != null && !agreement.isEmpty()) {
-      sql.append(" AND agreements.agreement_code = ?");
-      params.add(agreement);
-    }
+      if (agreement != null && !agreement.isEmpty()) {
+          sql.append(" AND agreements.agreement_code = ?");
+          params.add(agreement);
+      }
 
-    sql.append(" ORDER BY hs_codes.hs_code ASC, agreements.agreement_code ASC");
+      sql.append(" ORDER BY hs_codes.hs_code ASC, agreements.agreement_code ASC");
 
-    return jdbc.queryForList(sql.toString(), params.toArray());
+      return jdbc.queryForList(sql.toString(), params.toArray());
   }
 
   // Query for Tariff Table
@@ -158,7 +160,8 @@ public class TariffService {
                    hs_codes.hs_code,
                    hs_codes.description AS hs_description,
                    tariff_rates.rate_percent,
-                   tariff_rates.valid_from
+                   tariff_rates.valid_from,
+                  tariff_rates.valid_to
             FROM tariff_rates
             JOIN countries AS exporter
               ON exporter.id = tariff_rates.exporter_id

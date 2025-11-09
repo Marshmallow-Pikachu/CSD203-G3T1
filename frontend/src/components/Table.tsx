@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
-import { useNavigate } from "react-router-dom";
 
 type Tariff = {
   exporter_code: string;
@@ -15,11 +14,11 @@ type Tariff = {
   hs_description: string; // product
   rate_percent: number; // tariff rate
   valid_from: string;
+  valid_to: string; // newly added column
 };
 
 export default function Table() {
   // Start Coding Table here & call api to get data
-  const navigate = useNavigate();
 
   const { data, isLoading, error } = useQuery<Tariff[]>({
     queryKey: ["tariffs", "all"],
@@ -65,6 +64,7 @@ export default function Table() {
                     <th className="px-6 py-4 text-left whitespace-nowrap">Importer Customs</th>
                     <th className="px-6 py-4 text-left whitespace-nowrap">Importer Tax</th>
                     <th className="px-6 py-4 text-left whitespace-nowrap">Valid From</th>
+                    <th className="px-6 py-4 text-left whitespace-nowrap">Valid To</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -96,6 +96,9 @@ export default function Table() {
                       </td>
                       <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
                         {item.valid_from}
+                      </td>
+                      <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
+                        {item.valid_to ?? "—"}
                       </td>
                     </tr>
                   ))}

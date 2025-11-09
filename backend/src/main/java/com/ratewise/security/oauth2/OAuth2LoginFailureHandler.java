@@ -22,7 +22,6 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
 
         if (errorMessage != null && errorMessage.contains("Email not found")) {
             errorType = "email_required";
-            errorMessage = "Please add and verify an email address in your GitHub settings, or make your primary email public.";
         }
 
         String targetUrl = "http://localhost:5173/login?error=" + errorType + "&message=" +

@@ -1,62 +1,52 @@
 import { useEffect, useState } from "react";
-import { api } from "../api/client";
 import { useNavigate } from "react-router-dom";
-import Button from "../components/Button";
 import { toast } from "react-hot-toast";
+import { api } from "../api/client";
+import Button from "../components/Button";
+import { handleLogout } from "../api/user";
 
-interface UserProfile {
-  username: string;
-  oauthProvider?: string | null;
-}
+type UserProfile = { username: string };
 
 export default function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
 
-  // Fetch user profile on mount
+  // Read once; no need to keep token in React state
+  const token = localStorage.getItem("accessToken");
+
   useEffect(() => {
-    const jwt = localStorage.getItem("accessToken");
-    if (!jwt) {
+    // If no token, bounce to login
+    if (!token) {
       toast.error("No token found. Please log in again.");
       navigate("/login");
       return;
     }
-    setToken(jwt);
 
-    const fetchProfile = async () => {
+    let cancelled = false;
+
+    (async () => {
       try {
-        const res = await api.get("/api/v1/auth/profile", {
-          headers: { Authorization: `Bearer ${jwt}` },
+        const { data } = await api.get<UserProfile>("/api/v1/auth/profile", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setProfile(res.data);
-      } catch (error: any) {
-        console.error("Failed to load profile", error);
-        toast.error("Session expired. Please log in again.");
-        localStorage.removeItem("accessToken");
-        navigate("/login");
+        if (!cancelled) setProfile(data);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load profile", err);
+          toast.error("Session expired. Please log in again.");
+          localStorage.removeItem("accessToken");
+          navigate("/login");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    })();
+
+    return () => {
+      cancelled = true; // avoid state updates after unmount
     };
-
-    fetchProfile();
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    try {
-      await api.delete("/api/v1/auth/session", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (e) {
-      console.warn("Logout request failed, clearing token anyway");
-    } finally {
-      localStorage.removeItem("accessToken");
-      toast.success("Logged out successfully");
-      navigate("/login");
-    }
-  };
+  }, [navigate, token]);
 
   if (loading) {
     return (
@@ -72,22 +62,14 @@ export default function Profile() {
         <h2 className="text-2xl font-bold text-gray-800">User Profile</h2>
 
         {profile ? (
-          <>
-            <p className="text-gray-700">
-              <strong>Username:</strong> {profile.username}
-            </p>
-            {/* <p className="text-gray-700">
-              <strong>Login Method:</strong>{" "}
-              {profile.oauthProvider
-                ? profile.oauthProvider.toUpperCase()
-                : "Email/Password"}
-            </p> */}
-          </>
+          <p className="text-gray-700">
+            <strong>Username:</strong> {profile.username}
+          </p>
         ) : (
-          <p className="text-gray-500">No profile data available</p>
+          <p className="text-gray-500">No profile data available.</p>
         )}
 
-        {/* Debug section for token */}
+        {/* Debug token block (remove in production) */}
         {token && (
           <div className="mt-4 text-left bg-gray-100 rounded-lg p-3">
             <p className="text-xs font-mono text-gray-600 break-all">
@@ -99,7 +81,7 @@ export default function Profile() {
         )}
 
         <div className="pt-4">
-          <Button onClick={handleLogout}>Logout</Button>
+          <Button onClick={() => handleLogout(token, navigate)}>Logout</Button>
         </div>
       </div>
     </div>
