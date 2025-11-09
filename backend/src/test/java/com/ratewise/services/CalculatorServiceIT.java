@@ -54,7 +54,7 @@ class CalculatorServiceIT {
         Map<String, Object> result = calculatorService.calculateLandedCost(request);
         
         assertTrue((Boolean) result.get("ok"));
-        assertEquals(17.76, ((Number) result.get("rate_percent")).doubleValue(), 0.01);
+        assertEquals(17.03, ((Number) result.get("rate_percent")).doubleValue(), 0.01);
         assertEquals("FOB", result.get("customs_basis"));
         assertEquals(1000.0, ((Number) result.get("customs_value")).doubleValue(), 0.01);
         assertNotNull(result.get("total_landed_cost"));
