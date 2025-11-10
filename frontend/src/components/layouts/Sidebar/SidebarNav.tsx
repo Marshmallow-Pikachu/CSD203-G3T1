@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { LayoutGrid, Calculator, Table } from "lucide-react";
+import { LayoutGrid, Calculator, Table, ChartSpline } from "lucide-react";
 
 const navItems = [
   { to: "/home", label: "Dashboard", icon: LayoutGrid },
   { to: "/calculator", label: "Calculator", icon: Calculator },
   { to: "/tariffs", label: "Tariffs", icon: Table },
+  { to: "/graph", label: "Trends", icon: ChartSpline}
 ];
 
 export function SidebarNav({ collapsed }: { collapsed: boolean }) {
