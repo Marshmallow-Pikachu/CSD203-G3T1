@@ -48,7 +48,8 @@ function reshapeData(data: Tariff[]): TariffData {
     const records: { [pair: string]: { [date:string]: number[] }} = {};
 
     // Process and store the rate values
-    data.forEach(tariff => {
+    data.filter(tariff => tariff.valid_from >= "2000-01-01")
+    .forEach(tariff => {
         const pair = `${tariff.exporter_code}→${tariff.importer_code}`;
 
         // If its the first time the pair is seen
@@ -64,6 +65,9 @@ function reshapeData(data: Tariff[]): TariffData {
         // Add the rate into the records
         records[pair][tariff.valid_from].push(tariff.rate_percent);
     });
+
+    // remove the first entry from records
+    
 
     const output: TariffData = {};
 
