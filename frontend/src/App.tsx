@@ -9,6 +9,7 @@ import Tariffs from "./pages/Tariffs";
 import Signup from "./pages/Signup";
 import OAuthCallback from "./pages/oauth-callback";
 import Profile from "./pages/Profile";
+import GraphPage from "./pages/GraphPage";
 import TableAdmin from "./pages/Admin";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/tariffs" element={<Tariffs />} />
           <Route path="/admin" element={<TableAdmin />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/graph" element={<GraphPage />} />
         </Route>
 
         {/* Catch-all → redirect to login */}
