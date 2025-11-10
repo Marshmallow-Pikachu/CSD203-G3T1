@@ -1,42 +1,60 @@
 import { useState } from "react";
-import { api } from "../api/client";
 import { useNavigate, Link } from "react-router-dom";
+import { api } from "../api/client";
 import Button from "../components/Button";
-import SocialAuthButtons from "../components/SocialAuthButtons";
-import toast from "react-hot-toast";
+import Input from "../components/Input";      
+import { toast } from "react-hot-toast";  
+
+// --- small helpers for readability ---
+const isValidEmail = (v: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+const isStrongPassword = (v: string) =>
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);
 
 export default function Signup() {
   const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState(""); 
-  const [confirm, setConfirm]   = useState("");
+  const [email,    setEmail]    = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm,  setConfirm]  = useState("");
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const u = username.trim();
+    const em = email.trim();
+
+    if (!isValidEmail(em)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    if (!isStrongPassword(password)) {
+      toast.error(
+        "Password must be 8+ chars and include 1 uppercase, 1 lowercase, and 1 number."
+      );
+      return;
+    }
     if (password !== confirm) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match.");
       return;
     }
 
     try {
-      // TODO: point to your real registration endpoint
       const res = await api.post(
         "/api/v1/auth/registration",
-        { username, email, password },
+        { username: u, email: em, password },
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // You can auto-login after signup or redirect to /login
-      // Here, we’ll redirect to /login by default
       if (res.status === 201 || res.status === 200) {
         toast.success("Signup successful!");
-        setTimeout(() => navigate("/login"), 1500);
-
+        setTimeout(() => navigate("/login"), 1200);
       }
     } catch (error: any) {
-      console.error("Signup failed", error.response?.data || error.message);
-      alert("Signup failed");
+      console.error("Signup failed", error?.response?.data || error?.message);
+      toast.error("Signup failed. Please try again.");
     }
   };
 
@@ -50,64 +68,54 @@ export default function Signup() {
           Create your account
         </h2>
 
-        <div className="space-y-1">
-          <label htmlFor="username" className="block text-sm font-medium text-gray-600">
-            Username
-          </label>
-          <input
-            id="username" type="text" value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Choose a username"
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            required
-          />
-        </div>
+        <Input
+          id="username"
+          label="Username"
+          value={username}
+          onChange={setUsername}
+          placeholder="Choose a username"
+        />
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-600">
-            Email
-          </label>
-          <input
-            id="email" type="email" value={email}
-            onChange={(e) => setEmail(e.target.value)}
+        <div>
+          <Input
+            id="email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={setEmail}
             placeholder="you@example.com"
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Please enter a valid email (e.g. user@example.com).
+          </p>
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-600">
-            Password
-          </label>
-          <input
-            id="password" type="password" value={password}
-            onChange={(e) => setPassword(e.target.value)}
+        <div>
+          <Input
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={setPassword}
             placeholder="••••••••"
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Must include at least 1 uppercase, 1 lowercase, 1 number, and be 8+ characters.
+          </p>
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="confirm" className="block text-sm font-medium text-gray-600">
-            Confirm password
-          </label>
-          <input
-            id="confirm" type="password" value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="••••••••"
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            required
-          />
-        </div>
+        <Input
+          id="confirm"
+          label="Confirm password"
+          type="password"
+          value={confirm}
+          onChange={setConfirm}
+          placeholder="••••••••"
+        />
 
         <div className="flex justify-center">
           <Button type="submit">Create account</Button>
         </div>
-
-        {/* Social signups (same entry points as social login) */}
-        <SocialAuthButtons />
 
         <p className="text-sm text-center text-gray-600">
           Already have an account?{" "}

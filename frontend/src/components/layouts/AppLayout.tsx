@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "../CollapsibleSidebar";
+import Sidebar from "./Sidebar/CollapsibleSidebar";
 
 export default function AppLayout() {
   return (

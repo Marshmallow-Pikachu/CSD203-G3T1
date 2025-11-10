@@ -16,6 +16,7 @@ public record CalculatorRequest(
     String exporter,
     String importer,
     String hsCode,
+    String productDescription, 
     String agreement,
     @JsonProperty("goods_value") Double goodsValue,
     Integer quantity,
