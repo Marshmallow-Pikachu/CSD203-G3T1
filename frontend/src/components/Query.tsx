@@ -33,7 +33,7 @@ export default function Query() {
     staleTime: 30_000,
     retry: 1,
   });
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">

@@ -10,7 +10,6 @@ import {
   Title,
   Tooltip,
   Legend,
-  plugins,
   TimeScale
 } from 'chart.js';
 
@@ -35,18 +34,67 @@ type Tariff = {
     agreement_code: string;
     agreement_name: string;
     hs_code: string;
-    hs_description: string; // product
-    rate_percent: number; // tariff rate
+    hs_description: string;
+    rate_percent: number;
     valid_from: string;
-    valid_to: string; // newly added column
+    valid_to: string;
 };
+
+type TariffPoint = { date: string; rate: number };
+type TariffData = { [pair: string]: TariffPoint[] };
+
+// To reshape based on average rates
+function reshapeData(data: Tariff[]): TariffData {
+    const records: { [pair: string]: { [date:string]: number[] }} = {};
+
+    // Process and store the rate values
+    data.forEach(tariff => {
+        const pair = `${tariff.exporter_code}→${tariff.importer_code}`;
+
+        // If its the first time the pair is seen
+        if (!records[pair]) {
+            records[pair] = {};
+        }
+
+        // If its the first time the date is seen for the pair
+        if (!records[pair][tariff.valid_from]) {
+            records[pair][tariff.valid_from] = [];
+        }
+
+        // Add the rate into the records
+        records[pair][tariff.valid_from].push(tariff.rate_percent);
+    });
+
+    const output: TariffData = {};
+
+    Object.entries(records).forEach( ([pair, dateRates]) => {
+        output[pair] = Object.entries(dateRates)
+                             .map( ([date, rates]) => ({
+                                date,
+                                rate: rates.reduce( (sum, r) => sum + r, 0) / rates.length
+                             }))
+                             .sort( (a,b) => a.date.localeCompare(b.date));
+    });
+
+    return output;
+}
+
+// Helper to generate a random hex color
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
 
 export default function Graph() {
     // For getting the data from the api
     const { data, isLoading, error } = useQuery<Tariff[]>({
         queryKey: ["tariffs", "all"],
         queryFn: async () => {
-            const res = await api.get("/api/v1/tariffs/table");
+            const res = await api.get("/api/v1/tariffs/list");
             return res.data as Tariff[];
         },
         staleTime: 30_000,
@@ -64,46 +112,42 @@ export default function Graph() {
             </div>
         );
     }
+    
+    // clean and process the data
+    const tariffData = reshapeData(data!);
 
-    const hsCodes = Array.from(new Set(data?.map(tariff => tariff.hs_code)));
+    const labels: string[] = Array.from(
+        new Set(
+            Object.values(tariffData).flat().map(pt => pt.date)
+        )
+    ).sort();
 
-    const datasets = hsCodes.map(hsCode => {
-        const items = data?.filter(tariff => tariff.hs_code === hsCode);
-        
-        return {
-            label: items?.[0].hs_description || hsCode,
-            data: items?.map(tariff => ({
-                x: tariff.valid_to,
-                y: tariff.rate_percent
-            })) || [],
-            fill: false,
-            borderColor: '#' + Math.floor(Math.random() * 16777215).toString(16),
-            spanGaps: true,
-        }
-    })
+    const datasets = Object.entries(tariffData).map(([pair, pairData]) => ({
+        label: pair,
+        data: labels.map(date => pairData.find(pt => pt.date === date)?.rate ?? null),
+        fill: false,
+        borderwidth: 2,
+        borderColor: getRandomColor(),
+        pointRadius: 3,
+        pointHoverRadius: 4,
+    }));
+
     const chartOptions = {
         responsive: true,
+        plugins: { legend: {display: true}},
         scales: {
-            x: {
-                type: 'time',
-                time: { unit: 'year' },
-                title: { display: true, text: 'Date' }
-            },
-            y: { beginAtZero: true, title: { display: true, text: 'Tariff Rate (%)' } },
-        },
-        plugins: {
-            legend: { display: true },
-            title: { display: true, text: 'Tariff Rates Over Time' }
+            x: {title: {display: true, text: "Date"}},
+            y: {title: {display: true, text: "Average Tariff Rate (%"}}
         }
-    };
-
+    }
+    
     return (
         <section className="space-y-4">
             <h1 className="text-2xl font-semibold">Graph Page</h1>
             <p>This is a placeholder for the Graph page.</p>
             <Line 
-                data={{datasets}}
-                options={{chartOptions}}
+                data={{labels, datasets}}
+                options={chartOptions}
             />
         </section>
     );
