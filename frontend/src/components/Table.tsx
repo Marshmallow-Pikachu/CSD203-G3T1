@@ -68,8 +68,8 @@ export default function Table() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {data?.map((item) => (
-                    <tr key={`${item.hs_code}-${item.importer_code}-${item.exporter_code}`} className="hover:bg-gray-50 transition-colors">
+                  {data?.map((item, idx) => (
+                    <tr key={`${item.hs_code}-${item.importer_code}-${item.exporter_code}-${idx}`} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
                         {item.exporter_name} ({item.exporter_code})
                       </td>

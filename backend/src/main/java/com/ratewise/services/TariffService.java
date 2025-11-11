@@ -173,7 +173,6 @@ public class TariffService {
               ON agreements.id = tariff_rates.agreement_id
             JOIN tax_rules
               ON tax_rules.country_id = importer.id
-            WHERE tariff_rates.id < 3000
             ORDER BY exporter ASC, importer ASC, hs_code ASC
         """;
 
