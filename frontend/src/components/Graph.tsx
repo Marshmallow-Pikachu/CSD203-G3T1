@@ -42,6 +42,7 @@ type Tariff = {
 };
 
 const MAX_MONTH_DISPLAY = 240;
+const LABEL_LIST = ["SG→US", "US→SG", "SG→CN", "CN→SG","SG→JP", "JP→SG", "MY→SG", "VN→SG", "AU→SG", "AU→CN", "KR→SG"]
 
 type TariffPoint = { date: string; rate: number | null};
 type TariffData = { [pair: string]: TariffPoint[] };
@@ -64,20 +65,6 @@ function enumerateMonths(minDate: string, maxDate: string): string[] {
     console.log(dates);
     const start = dates.length > MAX_MONTH_DISPLAY ? dates.length - MAX_MONTH_DISPLAY  : 0;
     return dates.slice(start);
-}
-
-
-function enumerateLastNMonths(years: number): string[] {
-  const months = years * 12;
-  const now = new Date();
-  const start = addMonths(now, -months + 1); // Inclusive
-  const dates: string[] = [];
-  let current = start;
-  for (let i = 0; i < months; i++) {
-    dates.push(format(current, "yyyy-MM"));
-    current = addMonths(current, 1);
-  }
-  return dates;
 }
 
 // To reshape based on average rates
@@ -137,13 +124,33 @@ function reshapeData(data: Tariff[]): TariffData {
 }
 
 // Helper to generate a random hex color
-function getRandomColor() {
-  const letters = '0123456789ABCDEF';
-  let color = '#';
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
+function getColor(pair: string) {
+  switch (pair) {
+    case "SG→US":
+        return "#2ce1f9ff";
+    case "US→SG":
+        return "#1d68ffff";
+    case "SG→CN":
+        return "#ff9a9aff";
+    case "CN→SG":
+        return "#d92f2fff";
+    case "SG→JP":
+        return "#ff92e7ff";
+    case "JP→SG":
+        return "#b53fffff";
+    case "MY→SG":
+        return "#36fe8aff";
+    case "VN→SG":
+        return "#03762aff";
+    case "AU→SG":
+        return "#f9aa2cff";
+    case "AU→CN":
+        return "#ffecbbff";
+    case "KR→SG":
+        return "#3007d7ff";
+    default:
+        return "#000000";
   }
-  return color;
 }
 
 export default function Graph() {
@@ -180,25 +187,38 @@ export default function Graph() {
         data: pairData.map((pt) => pt.rate),
         fill: false,
         borderwidth: 2,
-        borderColor: getRandomColor(),
+        borderColor: getColor(pair),
         pointRadius: 3,
         pointHoverRadius: 4,
     }));
 
     const chartOptions = {
         responsive: true,
-        plugins: { legend: {display: true}},
+        plugins: { 
+            legend: { 
+                display: true, 
+                position: 'left',
+                labels: {
+                    boxWidth: 30,
+                    boxHeight: 30,
+                }
+            },
+            title: {
+                display: true,
+                text: 'Tariff changes in the past 20 years'
+            }
+        },
         scales: {
             x: {title: {display: true, text: "Date"}},
-            y: {title: {display: true, text: "Average Tariff Rate (%"}}
+            y: {title: {display: true, text: "Average Tariff Rate (%)"}}
         },
         spanGaps: true,
     }
     
     return (
         <section className="space-y-4">
-            <h1 className="text-2xl font-semibold">Graph Page</h1>
-            <p>This is a placeholder for the Graph page.</p>
+            <h1 className="text-2xl font-semibold">Historical Data</h1>
+            <p>Below is the tariff changes in the past 20 years. You can click the labels on the left to toggle the visibility of each line.</p>
             <Line 
                 data={{labels, datasets}}
                 options={chartOptions}
