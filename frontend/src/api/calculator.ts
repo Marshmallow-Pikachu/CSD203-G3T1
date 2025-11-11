@@ -53,3 +53,13 @@ export async function fetchAgreements() {
     label: agreements.agreement_code
   }));
 }
+
+// get hs codes description for dropdown list
+export async function fetchHSCodesDescription() {
+  const {data} = await api.get("/api/v1/hscodes"); // goes to HSCodeController in backend
+
+  return data.map((hscodes: any) => ({
+    value: hscodes.description,
+    label: hscodes.description
+  }));
+}
