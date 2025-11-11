@@ -31,6 +31,9 @@ export const handleLogin = async (
 
     const token = res.data.accessToken;
     localStorage.setItem("accessToken", token);
+    localStorage.setItem("username", username);
+    localStorage.setItem("userRole", res.data.role);
+    // console.log("Login successful, received token:", token);
 
     toast.success("Login successful!");
     setTimeout(() => navigate("/home"), 1500);
@@ -77,3 +80,52 @@ export const handleLogout = async (
   }
 };
 
+
+export type UserProfile = { username: string; role: string };
+
+export async function getProfile(token: string): Promise<UserProfile> {
+  const { data } = await api.get<UserProfile>("/api/v1/auth/profile", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+}
+
+
+export function handleOAuthCallback(
+  search: string,
+  hash: string,
+  navigate: NavigateFunction
+) {
+  let token: string | null = null;
+
+  //Try reading from query params (?token=...)
+  const queryParams = new URLSearchParams(search);
+  token = queryParams.get("token");
+
+  // Fallback: read from hash (#token=...)
+  if (!token && hash) {
+    const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+    token = hashParams.get("token");
+  }
+
+  //Store token and navigate
+  if (token) {
+    try {
+      localStorage.setItem("accessToken", token);
+      console.log("OAuth token stored successfully.");
+      getProfile(token).then(profile => {
+        localStorage.setItem("username", profile.username);
+        localStorage.setItem("userRole", profile.role);
+      }).catch(err => {
+        console.error("Failed to fetch profile after OAuth login:", err);
+      });
+      navigate("/home", { replace: true });
+    } catch (err) {
+      console.error("Failed to save token:", err);
+      navigate("/login", { replace: true });
+    }
+  } else {
+    console.warn("No token found in URL.");
+    navigate("/login", { replace: true });
+  }
+}

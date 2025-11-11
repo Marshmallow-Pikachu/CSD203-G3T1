@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/client";
+import { toast } from "react-hot-toast";  
 import Button from "../components/Button";
 import Input from "../components/Input";      
-import { toast } from "react-hot-toast";  
+
 
 // --- small helpers for readability ---
 const isValidEmail = (v: string) =>

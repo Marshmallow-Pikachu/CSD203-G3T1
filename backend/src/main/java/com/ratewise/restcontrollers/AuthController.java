@@ -116,6 +116,7 @@ public class AuthController {
         String username = jwtUtil.getUsername(token);
         String email = jwtUtil.getEmail(token);
         String userId = jwtUtil.getUserId(token);
+        String role = jwtUtil.getRole(token);
 
         // Get user details from service
         User user = authService.getCurrentUser(email);
@@ -123,6 +124,7 @@ public class AuthController {
                 .userId(userId)
                 .username(username)
                 .email(email)
+                .role(role)
                 .build();
 
         return ResponseEntity.ok(response);

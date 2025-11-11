@@ -94,6 +94,9 @@ public class WebSecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/calculator/landed-cost").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/tariffs/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET,"/api/v1/countries/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET,"/api/v1/agreements/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET,"/api/v1/hscodes/**").hasAnyRole("ADMIN", "USER")
 
                         // Admin-only endpoints
                         .requestMatchers("/api/v1/admin/users/**").hasRole("ADMIN")
@@ -103,9 +106,6 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.DELETE,"/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/v1/admin/tariffs").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,"/api/v1/admin/tariffs").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/countries/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/api/v1/agreements/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/api/v1/hscodes/**").hasRole("ADMIN")
 
                         // Require authentication for any other request
                         .anyRequest().hasRole("ADMIN"))
