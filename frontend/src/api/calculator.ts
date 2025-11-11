@@ -44,12 +44,12 @@ export async function fetchCountries() {
   }));
 }
 
-// // get agreements for dropdown list
-// export async function fetchAgreements() {
-//   const {data} = await api.get("/api/v1/agreements"); // goes to AgreementController in backend
+// get agreements for dropdown list
+export async function fetchAgreements() {
+  const {data} = await api.get("/api/v1/agreements"); // goes to AgreementController in backend
 
-//   return data.map((agreements: any) => ({
-//     value: agreements.agreement_code,
-//     label: `${agreements.agreement_name} (${agreements.agreement_code})`
-//   }));
-// }
+  return data.map((agreements: any) => ({
+    value: agreements.agreement_code,
+    label: `${agreements.agreement_name} (${agreements.agreement_code})`
+  }));
+}

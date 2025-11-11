@@ -4,7 +4,7 @@ import InputField from "./InputField";
 import { calculateLandedCost } from "../api/calculator";
 // For dropdown
 import { useQuery } from "@tanstack/react-query";
-import { fetchCountries } from "../api/calculator";
+import { fetchCountries , fetchAgreements} from "../api/calculator";
 import SelectField from "./SelectField";
 
 /**
@@ -65,12 +65,12 @@ export default function CalculatorForm({
   });
 
   // goes to api/calculator to fetchAgreement for dropdown list
-  // const {
-  //   data: agreements
-  // } = useQuery({
-  //   queryKey: ["agreements"],
-  //   queryFn: fetchAgreements,
-  // });
+  const {
+    data: agreements
+  } = useQuery({
+    queryKey: ["agreements"],
+    queryFn: fetchAgreements,
+  });
 
   // Ensure date string (from <input type="date">) is normalized to yyyy-MM-dd
   const normalizeDateInput = (d?: string) => {
@@ -128,12 +128,12 @@ export default function CalculatorForm({
             options={{ valueAsNumber: true }}
           />
           {/* <InputField label="Agreement" name="agreement" register={register} /> */}
-          {/* <SelectField
+          <SelectField
             label="Agreement"
             name="agreement"
             register={register}
             choices={agreements || []}
-          /> */}
+          />
           <InputField
             label="Product Quantity"
             name="quantity"
