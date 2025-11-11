@@ -1,11 +1,12 @@
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import InputField from "./InputField";
-import { calculateLandedCost } from "../api/calculator";
+import { SelectField } from "./InputField";
+import Button from "./Button";
+
 // For dropdown
 import { useQuery } from "@tanstack/react-query";
-import { fetchCountries , fetchAgreements , fetchHSCodesDescription} from "../api/calculator";
-import SelectField from "./SelectField";
+import { fetchCountries , fetchAgreements , fetchHSCodesDescription, calculateLandedCost} from "../api/calculator";
 
 /**
  * Form fields now use a single effectiveDate (ISO date string) instead of startDate/endDate.
@@ -192,15 +193,16 @@ export default function CalculatorForm({
           </div>
         </div>
       </div>
-
-      <button
-        id="calculate-button"
-        type="submit"
-        disabled={mutation.isPending}
-        className="mt-6 w-full md:w-auto px-6 py-3 rounded-xl border bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-60"
-      >
-        {mutation.isPending ? "Calculating..." : "Calculate Landed Cost"}
-      </button>
+      <div className="flex justify-center mt-6">
+        <Button
+          type="submit"
+          variant="secondary"
+          disabled={mutation.isPending}
+          className="w-full md:w-auto"
+        >
+          {mutation.isPending ? "Calculating..." : "Calculate Landed Cost"}
+        </Button>
+      </div>
     </form>
   );
 }
