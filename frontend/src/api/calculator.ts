@@ -33,3 +33,33 @@ export async function calculateLandedCost(payload: CalculatorRequest) {
   const { data } = await api.post("/api/v1/calculator/landed-cost", body);
   return data as Record<string, unknown>;
 }
+
+// get all the countries for dropdown list
+export async function fetchCountries() {
+  const {data} = await api.get("/api/v1/countries"); // goes to CountryController in backend
+
+  return data.map((countries: any) => ({
+    value: countries.country_code,
+    label: `${countries.country_name} (${countries.country_code})`
+  }));
+}
+
+// get agreements for dropdown list
+export async function fetchAgreements() {
+  const {data} = await api.get("/api/v1/agreements"); // goes to AgreementController in backend
+
+  return data.map((agreements: any) => ({
+    value: agreements.agreement_code,
+    label: agreements.agreement_code
+  }));
+}
+
+// get hs codes description for dropdown list
+export async function fetchHSCodesDescription() {
+  const {data} = await api.get("/api/v1/hscodes"); // goes to HSCodeController in backend
+
+  return data.map((hscodes: any) => ({
+    value: hscodes.description,
+    label: hscodes.description
+  }));
+}

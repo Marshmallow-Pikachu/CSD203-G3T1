@@ -2,6 +2,10 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import InputField from "./InputField";
 import { calculateLandedCost } from "../api/calculator";
+// For dropdown
+import { useQuery } from "@tanstack/react-query";
+import { fetchCountries , fetchAgreements , fetchHSCodesDescription} from "../api/calculator";
+import SelectField from "./SelectField";
 
 /**
  * Form fields now use a single effectiveDate (ISO date string) instead of startDate/endDate.
@@ -52,6 +56,30 @@ export default function CalculatorForm({
     onError: (err: any) => onError?.(err),
   });
 
+  // goes to api/calculator to fetchCountries for dropdown list
+  const {
+    data: countries
+  } = useQuery({
+    queryKey: ["countries"],
+    queryFn: fetchCountries,
+  });
+
+  // goes to api/calculator to fetchAgreement for dropdown list
+  const {
+    data: agreements
+  } = useQuery({
+    queryKey: ["agreements"],
+    queryFn: fetchAgreements,
+  });
+
+  // goes to api/calculator to fetchHSCodesDescription for dropdown list
+  const {
+    data: description
+  } = useQuery({
+    queryKey: ["description"],
+    queryFn: fetchHSCodesDescription,
+  });
+
   // Ensure date string (from <input type="date">) is normalized to yyyy-MM-dd
   const normalizeDateInput = (d?: string) => {
     // input type="date" already gives 'YYYY-MM-DD' in most browsers; just sanity-check it
@@ -69,7 +97,7 @@ export default function CalculatorForm({
       exporter: s(raw.exporter),
       importer: s(raw.importer),
       agreement: s(raw.agreement) ?? "MFN",
-      hsCode: hs,s,
+      hsCode: hs,
       // only send productDescription if hsCode is missing
       productDescription: hs ? undefined : s(raw.productDescription),
       goods_value: Number.isFinite(raw.goods_value) ? Number(raw.goods_value) : 0,
@@ -92,8 +120,20 @@ export default function CalculatorForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left column */}
         <div className="space-y-4">
-          <InputField label="Product Description" name="productDescription" register={register} />
-          <InputField label="Country of Origin" name="exporter" register={register} />
+          {/* <InputField label="Product Description" name="productDescription" register={register} /> */}
+          <SelectField
+            label="Product Description"
+            name="productDescription"
+            register={register}
+            choices={description || []}
+          />
+          {/* <InputField label="Country of Origin" name="exporter" register={register} /> */}
+          <SelectField
+            label="Country of Origin"
+            name="exporter"
+            register={register}
+            choices={countries || []}
+          />
           <InputField
             label="Product Value (USD)"
             name="goods_value"
@@ -101,7 +141,13 @@ export default function CalculatorForm({
             register={register}
             options={{ valueAsNumber: true }}
           />
-          <InputField label="Agreement" name="agreement" register={register} />
+          {/* <InputField label="Agreement" name="agreement" register={register} /> */}
+          <SelectField
+            label="Agreement"
+            name="agreement"
+            register={register}
+            choices={agreements || []}
+          />
           <InputField
             label="Product Quantity"
             name="quantity"
@@ -114,7 +160,13 @@ export default function CalculatorForm({
         {/* Right column */}
         <div className="space-y-4">
           <InputField label="HS Code" name="hsCode" register={register} />
-          <InputField label="Destination Country" name="importer" register={register} />
+          {/* <InputField label="Destination Country" name="importer" register={register} /> */}
+          <SelectField
+            label="Destination Country"
+            name="importer"
+            register={register}
+            choices={countries || []}
+          />
           <InputField
             label="Freight/Shipping Cost (USD)"
             name="freight"
