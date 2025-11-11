@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -243,5 +244,24 @@ class TariffServiceIT {
         }
     }
 
-    // void testReturnHistoricalRates
+    // failing test
+    @Test
+    void testGetHistoricalTariffRate() {
+        // Query rate valid on a past date
+        LocalDate pastDate = LocalDate.of(2024, 1, 1);
+        
+        Map<String, Object> result = tariffService.getTariffInfo(
+            VALID_COUNTRY_CODE,
+            VALID_IMPORTER,
+            VALID_HS_CODE,
+            VALID_AGREEMENT,
+            pastDate  // Add date parameter
+        );
+
+        assertNotNull(result);
+        // Verify the returned rate was valid on that date
+        LocalDate validFrom = ((java.sql.Date) result.get("valid_from")).toLocalDate();
+        assertTrue(validFrom.isBefore(pastDate) || validFrom.isEqual(pastDate));
+}
+
 }
