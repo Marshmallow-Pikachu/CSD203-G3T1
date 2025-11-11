@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { Line } from "react-chartjs-2";
+import {addMonths, isAfter, isBefore, format, parseISO } from "date-fns";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -40,12 +41,36 @@ type Tariff = {
     valid_to: string;
 };
 
-type TariffPoint = { date: string; rate: number };
+type TariffPoint = { date: string; rate: number | null};
 type TariffData = { [pair: string]: TariffPoint[] };
+
+interface Product {
+    rate: number;
+    valid_from: string;
+}
+
+// To get the range of months to display in our graph
+function enumerateMonths(minDate: string, maxDate: string): string[] {
+    const dates: string[] = [];
+    let current = parseISO(minDate);
+    const end = parseISO(maxDate);
+    while (isBefore(current, addMonths(end, 1))) {
+        dates.push(format(current, "yyyy-MM"));
+        current = addMonths(current, 1);
+    }
+    
+    return dates;
+}
 
 // To reshape based on average rates
 function reshapeData(data: Tariff[]): TariffData {
-    const records: { [pair: string]: { [date:string]: number[] }} = {};
+    // Find the bounds in the data
+    const firstDate = data.filter(tariff => tariff.valid_from >= "2000-01-01")
+                          .reduce((min, x) => min < x.valid_from ? min : x.valid_from, data[0].valid_from);
+    const lastDate = data.reduce((max, x) => max > x.valid_from ? max : x.valid_from, data[0].valid_to);
+    const monthList = enumerateMonths(firstDate, lastDate);
+
+    const records: { [pair: string]: Tariff[] } = {};
 
     // Process and store the rate values
     data.filter(tariff => tariff.valid_from >= "2000-01-01")
@@ -54,31 +79,41 @@ function reshapeData(data: Tariff[]): TariffData {
 
         // If its the first time the pair is seen
         if (!records[pair]) {
-            records[pair] = {};
-        }
-
-        // If its the first time the date is seen for the pair
-        if (!records[pair][tariff.valid_from]) {
-            records[pair][tariff.valid_from] = [];
+            records[pair] = [];
         }
 
         // Add the rate into the records
-        records[pair][tariff.valid_from].push(tariff.rate_percent);
+        records[pair].push(tariff);
     });
-
-    // remove the first entry from records
     
-
+    // build the dataset for the graph
     const output: TariffData = {};
 
-    Object.entries(records).forEach( ([pair, dateRates]) => {
-        output[pair] = Object.entries(dateRates)
-                             .map( ([date, rates]) => ({
-                                date,
-                                rate: rates.reduce( (sum, r) => sum + r, 0) / rates.length
-                             }))
-                             .sort( (a,b) => a.date.localeCompare(b.date));
-    });
+    for (const [pair, tariffs] of Object.entries(records)) {
+        const monthSeries: TariffPoint[] = [];
+
+        for (const month of monthList) {
+            const products: { [hs: string]: Product } = {};
+
+            tariffs.forEach( t => {
+                const from = t.valid_from.slice(0, 7);
+                const to = t.valid_to.slice(0,7);
+                if (month >= from && month <= to) {
+                    if (!products[t.hs_code] || new Date(t.valid_from) > new Date(products[t.hs_code].valid_from)) {
+                        products[t.hs_code] = {rate: t.rate_percent, valid_from: t.valid_from};
+                    }
+                }
+            });
+
+            const rates = Object.values(products).map(p => p.rate);
+            monthSeries.push({
+                date: month,
+                rate: rates.length > 0 ? rates.reduce((a,b) => a + b, 0) / rates.length : null,
+            })
+        }
+        output[pair] = monthSeries;
+    }
+
 
     return output;
 }
@@ -120,15 +155,11 @@ export default function Graph() {
     // clean and process the data
     const tariffData = reshapeData(data!);
 
-    const labels: string[] = Array.from(
-        new Set(
-            Object.values(tariffData).flat().map(pt => pt.date)
-        )
-    ).sort();
+    const labels = Object.values(tariffData)[0]?.map((tp) => tp.date) ?? [];
 
     const datasets = Object.entries(tariffData).map(([pair, pairData]) => ({
         label: pair,
-        data: labels.map(date => pairData.find(pt => pt.date === date)?.rate ?? null),
+        data: pairData.map((pt) => pt.rate),
         fill: false,
         borderwidth: 2,
         borderColor: getRandomColor(),
@@ -142,7 +173,8 @@ export default function Graph() {
         scales: {
             x: {title: {display: true, text: "Date"}},
             y: {title: {display: true, text: "Average Tariff Rate (%"}}
-        }
+        },
+        spanGaps: true,
     }
     
     return (
