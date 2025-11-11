@@ -56,7 +56,7 @@ export default function CalculatorForm({
     onError: (err: any) => onError?.(err),
   });
 
-  // goes to api/calculator to fetchCountries for dropdown list
+    // goes to api/calculator to fetchCountries for dropdown list
   const {
     data: countries
   } = useQuery({

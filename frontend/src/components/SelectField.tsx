@@ -1,5 +1,7 @@
 import type { UseFormRegister, FieldValues, Path, RegisterOptions } from "react-hook-form";
 
+// for dropdown list
+
 type SelectFieldProps<TForm extends FieldValues> = {
   label: string;
   name: Path<TForm>;
