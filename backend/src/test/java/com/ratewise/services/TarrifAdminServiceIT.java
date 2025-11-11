@@ -8,8 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,8 +22,7 @@ class TariffAdminServiceIT {
     @Autowired
     private JdbcTemplate jdbc;
 
-    private static Integer createdTariffId;
-
+    private static List<Integer> createdTariffIds = new ArrayList<>();
     private static final String TEST_EXPORTER = "SG";  
     private static final String TEST_IMPORTER = "US";  
     private static final String TEST_HS_CODE = "010121";
@@ -77,17 +75,26 @@ class TariffAdminServiceIT {
         }
     }
 
+
     @AfterAll
     static void cleanup(@Autowired JdbcTemplate jdbc) {
-        // Clean up test tariff if created
-        if (createdTariffId != null) {
+        // Clean up ALL test tariffs
+        for (Integer tariffId : createdTariffIds) {
             try {
-                jdbc.update("DELETE FROM tariff_rates WHERE id = ?", createdTariffId);
-                System.out.println("Cleaned up test tariff ID: " + createdTariffId);
+                jdbc.update("DELETE FROM tariff_rates WHERE id = ?", tariffId);
+                System.out.println("Cleaned up test tariff ID: " + tariffId);
             } catch (Exception e) {
-                System.err.println("Failed to clean up test tariff: " + e.getMessage());
+                System.err.println("Failed to clean up test tariff " + tariffId + ": " + e.getMessage());
             }
         }
+        createdTariffIds.clear();
+    }
+
+    // Helper method to track created tariffs
+    private void trackCreatedTariff(Map<String, Object> result) {
+        Integer id = ((Number) result.get("id")).intValue();
+        createdTariffIds.add(id);
+        System.out.println("Tracking tariff ID for cleanup: " + id);
     }
 
     @Test
@@ -98,7 +105,7 @@ class TariffAdminServiceIT {
         request.importerCode = TEST_IMPORTER;
         request.hsCode = TEST_HS_CODE;
         request.agreementCode = TEST_AGREEMENT;
-        request.ratePercent = new BigDecimal(5.5);
+        request.ratePercent = new BigDecimal("5.5");
         request.validFrom = "2025-01-01";
         request.validTo = "2025-12-31";
 
@@ -111,8 +118,7 @@ class TariffAdminServiceIT {
         assertEquals(TEST_HS_CODE, result.get("hs_code"));
         assertEquals(5.5, ((Number) result.get("rate_percent")).doubleValue());
 
-        // Store for cleanup
-        createdTariffId = ((Number) result.get("id")).intValue();
+        trackCreatedTariff(result);  // ← Track for cleanup
     }
 
     @Test
@@ -122,7 +128,7 @@ class TariffAdminServiceIT {
         request.importerCode = TEST_IMPORTER;
         request.hsCode = TEST_HS_CODE;
         request.agreementCode = TEST_AGREEMENT;
-        request.ratePercent = new BigDecimal(5.5);
+        request.ratePercent = new BigDecimal("5.5");
         request.validFrom = "invalid-date";
 
         assertThrows(IllegalArgumentException.class, () -> {
@@ -137,7 +143,7 @@ class TariffAdminServiceIT {
         request.importerCode = TEST_IMPORTER;
         request.hsCode = TEST_HS_CODE;
         request.agreementCode = TEST_AGREEMENT;
-        request.ratePercent = new BigDecimal(5.5);
+        request.ratePercent = new BigDecimal("5.5");
         request.validFrom = null;
 
         assertThrows(IllegalArgumentException.class, () -> {
@@ -145,26 +151,22 @@ class TariffAdminServiceIT {
         });
     }
 
-    // -------- READ --------
-
     @Test
     @Order(2)
     void testGetByIdSuccess() {
-        // First create a tariff
         TariffAdminRequest request = new TariffAdminRequest();
         request.exporterCode = TEST_EXPORTER;
         request.importerCode = TEST_IMPORTER;
         request.hsCode = TEST_HS_CODE;
         request.agreementCode = TEST_AGREEMENT;
-        request.ratePercent = new BigDecimal(7.0);
+        request.ratePercent = new BigDecimal("7.0");
         request.validFrom = "2025-02-01";
         request.validTo = "2025-11-30";
 
         Map<String, Object> created = tariffAdminService.createTariff(request);
-        Integer tariffId = ((Number) created.get("id")).intValue();
-        createdTariffId = tariffId;
+        trackCreatedTariff(created);  // ← Track for cleanup
 
-        // Now fetch it
+        Integer tariffId = ((Number) created.get("id")).intValue();
         Map<String, Object> fetched = tariffAdminService.getById(tariffId);
 
         assertNotNull(fetched);
@@ -180,35 +182,31 @@ class TariffAdminServiceIT {
         });
     }
 
-    // -------- UPDATE --------
-
     @Test
     @Order(3)
     void testUpdateTariffSuccess() {
-        // Create first
         TariffAdminRequest createReq = new TariffAdminRequest();
         createReq.exporterCode = TEST_EXPORTER;
         createReq.importerCode = TEST_IMPORTER;
         createReq.hsCode = TEST_HS_CODE;
         createReq.agreementCode = TEST_AGREEMENT;
-        createReq.ratePercent = new BigDecimal(3.0);
+        createReq.ratePercent = new BigDecimal("3.0");
         createReq.validFrom = "2025-03-01";
 
         Map<String, Object> created = tariffAdminService.createTariff(createReq);
-        Integer tariffId = ((Number) created.get("id")).intValue();
-        createdTariffId = tariffId;
+        trackCreatedTariff(created);  // ← Track for cleanup
 
-        // Update rate
+        Integer tariffId = ((Number) created.get("id")).intValue();
+
         TariffAdminRequest updateReq = new TariffAdminRequest();
         updateReq.exporterCode = TEST_EXPORTER;
         updateReq.importerCode = TEST_IMPORTER;
         updateReq.hsCode = TEST_HS_CODE;
         updateReq.agreementCode = TEST_AGREEMENT;
-        updateReq.ratePercent = new BigDecimal(10.0);
+        updateReq.ratePercent = new BigDecimal("10.0");
         updateReq.validFrom = "2025-03-01";
 
         Map<String, Object> updated = tariffAdminService.updateTariff(tariffId, updateReq);
-
         assertEquals(10.0, ((Number) updated.get("rate_percent")).doubleValue());
     }
 
@@ -219,7 +217,7 @@ class TariffAdminServiceIT {
         request.importerCode = TEST_IMPORTER;
         request.hsCode = TEST_HS_CODE;
         request.agreementCode = TEST_AGREEMENT;
-        request.ratePercent = new BigDecimal(5.0);
+        request.ratePercent = new BigDecimal("5.0");
         request.validFrom = "2025-01-01";
 
         assertThrows(ResponseStatusException.class, () -> {
@@ -227,32 +225,26 @@ class TariffAdminServiceIT {
         });
     }
 
-    // -------- DELETE --------
-
     @Test
     @Order(4)
     void testDeleteTariffSuccess() {
-        // Create first
         TariffAdminRequest request = new TariffAdminRequest();
         request.exporterCode = TEST_EXPORTER;
         request.importerCode = TEST_IMPORTER;
         request.hsCode = TEST_HS_CODE;
         request.agreementCode = TEST_AGREEMENT;
-        request.ratePercent = new BigDecimal(2.0);
+        request.ratePercent = new BigDecimal("2.0");
         request.validFrom = "2025-04-01";
 
         Map<String, Object> created = tariffAdminService.createTariff(request);
         Integer tariffId = ((Number) created.get("id")).intValue();
-
-        // Delete it
+        
+        // Don't track - we're deleting it in this test
         tariffAdminService.deleteTariff(tariffId);
 
-        // Verify it's gone
         assertThrows(IllegalStateException.class, () -> {
             tariffAdminService.getById(tariffId);
         });
-
-        createdTariffId = null;  // No cleanup needed
     }
 
     @Test
@@ -262,14 +254,10 @@ class TariffAdminServiceIT {
         });
     }
 
-    // -------- LIST --------
-
     @Test
     void testListAll() {
         List<Map<String, Object>> tariffs = tariffAdminService.listAll();
-
         assertNotNull(tariffs);
-        // Should have at least some data (depends on your DB state)
         assertTrue(tariffs.size() >= 0);
     }
 }
