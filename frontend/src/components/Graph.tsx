@@ -41,6 +41,8 @@ type Tariff = {
     valid_to: string;
 };
 
+const MAX_MONTH_DISPLAY = 240;
+
 type TariffPoint = { date: string; rate: number | null};
 type TariffData = { [pair: string]: TariffPoint[] };
 
@@ -53,13 +55,29 @@ interface Product {
 function enumerateMonths(minDate: string, maxDate: string): string[] {
     const dates: string[] = [];
     let current = parseISO(minDate);
-    const end = parseISO(maxDate);
+    const end = isBefore(addMonths(parseISO(maxDate),1), new Date()) ? parseISO(maxDate): new Date();
     while (isBefore(current, addMonths(end, 1))) {
         dates.push(format(current, "yyyy-MM"));
         current = addMonths(current, 1);
     }
-    
-    return dates;
+
+    console.log(dates);
+    const start = dates.length > MAX_MONTH_DISPLAY ? dates.length - MAX_MONTH_DISPLAY  : 0;
+    return dates.slice(start);
+}
+
+
+function enumerateLastNMonths(years: number): string[] {
+  const months = years * 12;
+  const now = new Date();
+  const start = addMonths(now, -months + 1); // Inclusive
+  const dates: string[] = [];
+  let current = start;
+  for (let i = 0; i < months; i++) {
+    dates.push(format(current, "yyyy-MM"));
+    current = addMonths(current, 1);
+  }
+  return dates;
 }
 
 // To reshape based on average rates
@@ -67,7 +85,7 @@ function reshapeData(data: Tariff[]): TariffData {
     // Find the bounds in the data
     const firstDate = data.filter(tariff => tariff.valid_from >= "2000-01-01")
                           .reduce((min, x) => min < x.valid_from ? min : x.valid_from, data[0].valid_from);
-    const lastDate = data.reduce((max, x) => max > x.valid_from ? max : x.valid_from, data[0].valid_to);
+    const lastDate = data.reduce((max, x) => max > x.valid_to ? max : x.valid_to, data[0].valid_to);
     const monthList = enumerateMonths(firstDate, lastDate);
 
     const records: { [pair: string]: Tariff[] } = {};
@@ -133,7 +151,7 @@ export default function Graph() {
     const { data, isLoading, error } = useQuery<Tariff[]>({
         queryKey: ["tariffs", "all"],
         queryFn: async () => {
-            const res = await api.get("/api/v1/tariffs/list");
+            const res = await api.get("/api/v1/tariffs/table");
             return res.data as Tariff[];
         },
         staleTime: 30_000,
