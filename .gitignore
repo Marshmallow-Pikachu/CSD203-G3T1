@@ -55,3 +55,6 @@ MarcLocalEnvironment.env
 run-local.ps1
 src/main/resources/application.properties
 backend/run.sh
+
+# to ignore test log files from running unit and integration tests
+*.log 
