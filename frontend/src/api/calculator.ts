@@ -33,3 +33,13 @@ export async function calculateLandedCost(payload: CalculatorRequest) {
   const { data } = await api.post("/api/v1/calculator/landed-cost", body);
   return data as Record<string, unknown>;
 }
+
+// get the countries for dropdown list
+export async function fetchCountries() {
+  const {data} = await api.get("/api/v1/countries"); // goes to CountryController in backend
+
+  return data.map((countries: any) => ({
+    value: countries.country_code,
+    label: `${countries.country_name} (${countries.country_code})`
+  }));
+}

@@ -2,6 +2,10 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import InputField from "./InputField";
 import { calculateLandedCost } from "../api/calculator";
+// For dropdown
+import { useQuery } from "@tanstack/react-query";
+import { fetchCountries } from "../api/calculator";
+import SelectField from "./SelectField";
 
 /**
  * Form fields now use a single effectiveDate (ISO date string) instead of startDate/endDate.
@@ -52,6 +56,14 @@ export default function CalculatorForm({
     onError: (err: any) => onError?.(err),
   });
 
+  // goes to api/calculator to fetchCountries for dropdown list
+  const {
+    data: countries
+  } = useQuery({
+    queryKey: ["countries"],
+    queryFn: fetchCountries,
+  });
+
   // Ensure date string (from <input type="date">) is normalized to yyyy-MM-dd
   const normalizeDateInput = (d?: string) => {
     // input type="date" already gives 'YYYY-MM-DD' in most browsers; just sanity-check it
@@ -93,7 +105,13 @@ export default function CalculatorForm({
         {/* Left column */}
         <div className="space-y-4">
           <InputField label="Product Description" name="productDescription" register={register} />
-          <InputField label="Country of Origin" name="exporter" register={register} />
+          {/* <InputField label="Country of Origin" name="exporter" register={register} /> */}
+          <SelectField
+            label="Country of Origin"
+            name="exporter"
+            register={register}
+            choices={countries || []}
+          />
           <InputField
             label="Product Value (USD)"
             name="goods_value"
@@ -114,7 +132,13 @@ export default function CalculatorForm({
         {/* Right column */}
         <div className="space-y-4">
           <InputField label="HS Code" name="hsCode" register={register} />
-          <InputField label="Destination Country" name="importer" register={register} />
+          {/* <InputField label="Destination Country" name="importer" register={register} /> */}
+          <SelectField
+            label="Destination Country"
+            name="importer"
+            register={register}
+            choices={countries || []}
+          />
           <InputField
             label="Freight/Shipping Cost (USD)"
             name="freight"

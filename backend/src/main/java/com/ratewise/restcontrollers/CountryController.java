@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ratewise.services.CalculatorService;
+
 /**
  * Controller for querying country information.
  * Now Includes CIF/FOB customs basis that we added recently.
@@ -18,10 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/countries")
 public class CountryController {
 
+    private final CalculatorService calculatorService;
+
     private final JdbcTemplate jdbc;
     
-    public CountryController(JdbcTemplate jdbc) {
+    public CountryController(JdbcTemplate jdbc, CalculatorService calculatorService) {
         this.jdbc = jdbc;
+        this.calculatorService = calculatorService;
     }
 
 
@@ -45,6 +50,17 @@ public class CountryController {
         return jdbc.queryForMap(
             "SELECT country_code, country_name, customs_basis FROM countries WHERE country_code = ?",
             code
+        );
+    }
+
+    /**
+     * GET /api/countries
+     * Returns all countries for dropdown list
+     */
+    @GetMapping
+    public List<Map<String, Object>> getAllCountries() {
+        return jdbc.queryForList(
+            "SELECT country_code, country_name FROM countries ORDER BY country_code"
         );
     }
 }
