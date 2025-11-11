@@ -50,6 +50,6 @@ export async function fetchAgreements() {
 
   return data.map((agreements: any) => ({
     value: agreements.agreement_code,
-    label: `${agreements.agreement_name} (${agreements.agreement_code})`
+    label: agreements.agreement_code
   }));
 }

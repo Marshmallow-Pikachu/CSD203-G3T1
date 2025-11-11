@@ -105,6 +105,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/v1/admin/tariffs").hasRole("ADMIN")
                         .requestMatchers("/api/v1/countries/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,"/api/v1/agreements/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/v1/hscodes/**").hasRole("ADMIN")
 
                         // Require authentication for any other request
                         .anyRequest().hasRole("ADMIN"))
