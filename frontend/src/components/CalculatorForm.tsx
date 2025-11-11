@@ -56,13 +56,21 @@ export default function CalculatorForm({
     onError: (err: any) => onError?.(err),
   });
 
-    // goes to api/calculator to fetchCountries for dropdown list
+  // goes to api/calculator to fetchCountries for dropdown list
   const {
     data: countries
   } = useQuery({
     queryKey: ["countries"],
     queryFn: fetchCountries,
   });
+
+  // goes to api/calculator to fetchAgreement for dropdown list
+  // const {
+  //   data: agreements
+  // } = useQuery({
+  //   queryKey: ["agreements"],
+  //   queryFn: fetchAgreements,
+  // });
 
   // Ensure date string (from <input type="date">) is normalized to yyyy-MM-dd
   const normalizeDateInput = (d?: string) => {
@@ -119,7 +127,13 @@ export default function CalculatorForm({
             register={register}
             options={{ valueAsNumber: true }}
           />
-          <InputField label="Agreement" name="agreement" register={register} />
+          {/* <InputField label="Agreement" name="agreement" register={register} /> */}
+          {/* <SelectField
+            label="Agreement"
+            name="agreement"
+            register={register}
+            choices={agreements || []}
+          /> */}
           <InputField
             label="Product Quantity"
             name="quantity"

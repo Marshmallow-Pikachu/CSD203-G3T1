@@ -47,15 +47,4 @@ public class CountryController {
             code
         );
     }
-    
-    /**
-     * GET /api/countries
-     * Returns all countries for dropdown list
-     */
-    @GetMapping
-    public List<Map<String, Object>> getAllCountries() {
-        return jdbc.queryForList(
-            "SELECT country_code, country_name FROM countries ORDER BY country_code"
-        );
-    }
 }

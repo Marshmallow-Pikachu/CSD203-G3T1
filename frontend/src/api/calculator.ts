@@ -34,7 +34,7 @@ export async function calculateLandedCost(payload: CalculatorRequest) {
   return data as Record<string, unknown>;
 }
 
-// get all the countries for dropdown
+// get all the countries for dropdown list
 export async function fetchCountries() {
   const {data} = await api.get("/api/v1/countries"); // goes to CountryController in backend
 
@@ -43,3 +43,13 @@ export async function fetchCountries() {
     label: `${countries.country_name} (${countries.country_code})`
   }));
 }
+
+// // get agreements for dropdown list
+// export async function fetchAgreements() {
+//   const {data} = await api.get("/api/v1/agreements"); // goes to AgreementController in backend
+
+//   return data.map((agreements: any) => ({
+//     value: agreements.agreement_code,
+//     label: `${agreements.agreement_name} (${agreements.agreement_code})`
+//   }));
+// }
