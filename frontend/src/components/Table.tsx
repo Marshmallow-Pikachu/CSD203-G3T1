@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 // For search bar
 import { useState } from "react";
-import AutocompleteSearch from "./AutocompleteSearch";
+import AutocompleteSearch from "./forms/AutocompleteSearch";
 import { fetchTariffsTable, type TariffRow } from "../api/table";
 
 export default function Table() {

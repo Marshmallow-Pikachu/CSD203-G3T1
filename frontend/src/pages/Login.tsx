@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { handleLogin } from "../api/user";
-import SocialAuthButtons from "../components/SocialAuthButtons";
-import Input from "../components/Input";
+import SocialAuthButtons from "../components/buttons/SocialAuthButtons";
+import Input from "../components/forms/Input";
 
 
 export default function LoginPage() {

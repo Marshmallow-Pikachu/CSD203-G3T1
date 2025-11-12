@@ -53,6 +53,19 @@ export const handleLogin = async (
 };
 
 
+export type SignupPayload = {
+  username: string;
+  email: string;
+  password: string;
+};
+
+export async function signupUser(payload: SignupPayload) {
+  const res = await api.post("/api/v1/auth/registration", payload, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.data;
+}
+
 
 export const handleLogout = async (
   token: string | null,
