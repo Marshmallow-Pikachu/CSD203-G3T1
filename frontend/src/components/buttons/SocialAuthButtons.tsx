@@ -1,4 +1,9 @@
-const GOOGLE_AUTH_URL = "http://localhost:8080/oauth2/authorization/google";
+// components/buttons/SocialAuthButtons.tsx
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  window.location.origin; // fallback to same origin if env var missing
+
+const GOOGLE_AUTH_URL = `${API_BASE}/oauth2/authorization/google`;
 
 const go = (url: string) => {
   window.location.href = url;

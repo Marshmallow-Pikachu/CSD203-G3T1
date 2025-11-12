@@ -10,14 +10,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Data
 @Component
@@ -41,7 +45,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
         // Determine OAuth provider and extract user info accordingly
-        String provider = determineProvider(oAuth2User);
+        String provider = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
         String email = extractEmail(oAuth2User, provider);
         String name = extractName(oAuth2User, provider);
         String providerId = extractProviderId(oAuth2User, provider);
@@ -87,10 +91,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String jwtToken = jwtUtil.generateToken(userWithRole);
 
         // Build redirect URL to frontend with JWT token as query parameter
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/oauth-callback")
-                .queryParam("token", jwtToken)
-                .build()
-                .toUriString();
+        String frontendBase = resolveFrontendBaseUrl(request);
+        String targetUrl = frontendBase + "/oauth-callback#token=" + URLEncoder.encode(jwtToken, StandardCharsets.UTF_8);
 
         // Redirect to frontend with JWT token
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
@@ -124,6 +126,31 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         return null;
     }
 
+
+    private String resolveFrontendBaseUrl(HttpServletRequest request) {
+        // 1) Environment variable override (configure in Azure → Configuration)
+        String configured = System.getenv("FRONTEND_BASE_URL");
+        if (configured != null && !configured.isBlank()) {
+            return configured.replaceAll("/+$", ""); // trim trailing slash(es)
+        }
+
+        // 2) Reverse-proxy aware (Azure App Service / App Gateway / Nginx)
+        String proto = Optional.ofNullable(request.getHeader("X-Forwarded-Proto"))
+                            .orElse(request.getScheme());
+        String hostHeader = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
+                                    .orElse(request.getHeader("Host"));
+        if (hostHeader != null && !hostHeader.isBlank()) {
+            return proto + "://" + hostHeader;
+        }
+
+        // 3) Fallback to serverName:port
+        String host = request.getServerName();
+        int port = request.getServerPort();
+        boolean isDefaultPort = (("http".equalsIgnoreCase(proto) && port == 80) ||
+                                ("https".equalsIgnoreCase(proto) && port == 443));
+        return proto + "://" + host + (isDefaultPort ? "" : ":" + port);
+    }
+
     /**
      * Extract username for database storage based on provider
      */
@@ -145,4 +172,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         }
         return null;
     }
+    
+
 }
