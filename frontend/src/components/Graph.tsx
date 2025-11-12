@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { Line } from "react-chartjs-2";
-import {addMonths, isAfter, isBefore, format, parseISO } from "date-fns";
+import {addMonths, isBefore, format, parseISO } from "date-fns";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,7 +42,7 @@ type Tariff = {
 };
 
 const MAX_MONTH_DISPLAY = 240;
-const LABEL_LIST = ["SG→US", "US→SG", "SG→CN", "CN→SG","SG→JP", "JP→SG", "MY→SG", "VN→SG", "AU→SG", "AU→CN", "KR→SG"]
+// const LABEL_LIST = ["SG→US", "US→SG", "SG→CN", "CN→SG","SG→JP", "JP→SG", "MY→SG", "VN→SG", "AU→SG", "AU→CN", "KR→SG"]
 
 type TariffPoint = { date: string; rate: number | null};
 type TariffData = { [pair: string]: TariffPoint[] };
@@ -197,7 +197,7 @@ export default function Graph() {
         plugins: { 
             legend: { 
                 display: true, 
-                position: 'left',
+                position: 'left' as const,
                 labels: {
                     boxWidth: 30,
                     boxHeight: 30,
