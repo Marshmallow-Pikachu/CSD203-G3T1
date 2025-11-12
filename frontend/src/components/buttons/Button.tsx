@@ -7,6 +7,7 @@ type ButtonProps = {
   variant?: "primary" | "secondary" | "danger";
   className?: string;
   disabled?: boolean;
+  logo?: React.ReactNode;
 };
 
 export default function Button({
@@ -16,6 +17,7 @@ export default function Button({
   variant = "primary",
   className = "",
   disabled = false,
+  logo,
 }: ButtonProps) {
   let variantStyles = "";
 
@@ -42,6 +44,7 @@ export default function Button({
       disabled={disabled}
       className={`${baseStyles} ${variantStyles} ${className}`}
     >
+      {logo && <span className="mr-2">{logo}</span>}
       {children}
     </button>
   );
