@@ -3,34 +3,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import TariffForm from "./TariffForm";
 import { Modal, Th, Td } from "./TableAdminComponents";
+import { type TariffRow, fetchAdminTariffs } from "../api/table";
 
-export type Tariff = {
-  id: string | number;
-  exporter_code: string;
-  exporter_name: string;
-  importer_code: string;
-  importer_name: string;
-  importer_customs: string;
-  importer_tax: string;
-  agreement_code: string;
-  agreement_name: string;
-  hs_code: string;
-  hs_description: string;
-  rate_percent: number;
-  valid_from: string;
-  valid_to: string | null;
-};
 
 export default function TableAdmin() {
   const queryClient = useQueryClient();
 
-  // Read-only list
-  const { data, isLoading, isError, error, refetch, isFetching } = useQuery<Tariff[]>({
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery<TariffRow[]>({
     queryKey: ["tariffs", "all"],
-    queryFn: async () => {
-      const res = await api.get("/api/v1/admin/tariffs");
-      return res.data as Tariff[];
-    },
+    queryFn: fetchAdminTariffs,
     staleTime: 30_000,
     retry: 1,
   });
@@ -73,7 +61,7 @@ const rows = useMemo(() => {
       const res = await api.post("/api/v1/admin/tariffs", payload, {
         headers: { "Content-Type": "application/json" },
       });
-      alert("Tariff Created:\n\n" + JSON.stringify(res.data, null, 2));
+      alert("TariffRow Created:\n\n" + JSON.stringify(res.data, null, 2));
       return res.data;
     },
     onSuccess: () => {
@@ -81,7 +69,7 @@ const rows = useMemo(() => {
       setCreateOpen(false);
     },
     onError: (err: any) => {
-      alert("Error while creating tariff:\n\n" + (err?.message || JSON.stringify(err)));
+      alert("Error while creating TariffRow:\n\n" + (err?.message || JSON.stringify(err)));
     },
   });
 
@@ -99,7 +87,7 @@ const rows = useMemo(() => {
       setEditing(null);
     },
     onError: (err: any) => {
-      alert("Error while updating tariff:\n\n" + (err?.message || JSON.stringify(err)));
+      alert("Error while updating TariffRow:\n\n" + (err?.message || JSON.stringify(err)));
     },
   });
 
@@ -113,7 +101,7 @@ const rows = useMemo(() => {
       queryClient.invalidateQueries({ queryKey: ["tariffs", "all"] });
     },
     onError: (err: any) => {
-      alert("Error while deleting tariff:\n\n" + (err?.message || JSON.stringify(err)));
+      alert("Error while deleting TariffRow:\n\n" + (err?.message || JSON.stringify(err)));
     },
   });
 
@@ -157,7 +145,7 @@ const rows = useMemo(() => {
       alert("This row has no id; cannot delete. Ensure your list endpoint returns an id.");
       return;
     }
-    if (!confirm("Delete this tariff?")) return;
+    if (!confirm("Delete this TariffRow?")) return;
     deleteMutation.mutate(row.id);
   };
 
@@ -187,7 +175,7 @@ const rows = useMemo(() => {
     return (
       <div className="p-6 bg-gray-50">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-2xl font-semibold text-slate-800 mb-2">Tariff Table</h1>
+          <h1 className="text-2xl font-semibold text-slate-800 mb-2">TariffRow Table</h1>
           <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 p-4">
             <p className="font-medium">Couldn’t fetch tariffs.</p>
             <p className="text-sm mt-1">{message}</p>
@@ -209,7 +197,7 @@ const rows = useMemo(() => {
         <header className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-800">Tariff Table</h1>
           <div className="flex gap-3">
-            <button onClick={startCreate} className="rounded-md bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700">Add Tariff</button>
+            <button onClick={startCreate} className="rounded-md bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700">Add TariffRow</button>
             <button onClick={() => refetch()} disabled={isFetching} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">
               {isFetching ? "Refreshing…" : "Refresh"}
             </button>
@@ -240,7 +228,7 @@ const rows = useMemo(() => {
                 {rows.length === 0 ? (
                   <tr>
                     <td colSpan={12} className="px-6 py-10 text-center text-slate-500">
-                      No tariff rows found.
+                      No TariffRow rows found.
                     </td>
                   </tr>
                 ) : (
@@ -285,7 +273,7 @@ const rows = useMemo(() => {
 
       {/* Create Modal */}
       {createOpen && (
-        <Modal title="Add Tariff" onClose={() => setCreateOpen(false)}>
+        <Modal title="Add TariffRow" onClose={() => setCreateOpen(false)}>
           <TariffForm
             onSubmit={(payload) => createMutation.mutate(payload)}
             submitting={createMutation.isPending}
@@ -295,7 +283,7 @@ const rows = useMemo(() => {
 
       {/* Edit Modal */}
       {editOpen && editing && (
-        <Modal title="Edit Tariff" onClose={() => { setEditOpen(false); setEditing(null); }}>
+        <Modal title="Edit TariffRow" onClose={() => { setEditOpen(false); setEditing(null); }}>
           <TariffForm
             initial={{
               exporterCode: editing.exporterCode,

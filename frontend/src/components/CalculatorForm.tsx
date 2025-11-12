@@ -1,35 +1,18 @@
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import InputField from "./InputField";
-import { SelectField } from "./InputField";
-import Button from "./Button";
+import InputField from "./forms/InputField";
+import { SelectField } from "./forms/InputField";
+import Button from "./buttons/Button";
 
 // For dropdown
 import { useQuery } from "@tanstack/react-query";
 import { fetchCountries , fetchAgreements , fetchHSCodesDescription, calculateLandedCost} from "../api/calculator";
+import { type CalculateFields, type CalculatorFormProps } from "../api/calculator";
 
 /**
  * Form fields now use a single effectiveDate (ISO date string) instead of startDate/endDate.
  */
-interface CalculateFields {
-  productDescription: string;
-  hsCode: string;
-  exporter: string;
-  importer: string;
-  agreement: string;
-  goods_value: number;
-  quantity: number;
-  freight: number;
-  insurance: number;
-  effectiveDate: string; // yyyy-MM-dd (input type="date")
-}
 
-/** Callbacks used by the parent page to show results in the right panel. */
-export interface CalculatorFormProps {
-  onCalculating?: (payload: any) => void;
-  onResult?: (data: any) => void;
-  onError?: (error: any) => void;
-}
 
 export default function CalculatorForm({
   onCalculating,

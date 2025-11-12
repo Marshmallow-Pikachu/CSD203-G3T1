@@ -1,5 +1,5 @@
 // src/pages/Tariffs.tsx
-import Query from "../components/Query";
+// import Query from "../components/Query";
 import Table from "../components/Table";
 
 export default function Tariffs() {
@@ -13,9 +13,9 @@ export default function Tariffs() {
       </div>
 
       {/* Bottom: Query */}
-      <div className="rounded-xl border border-gray-200 p-3">
+      {/* <div className="rounded-xl border border-gray-200 p-3">
         <Query />
-      </div>
+      </div> */}
     </section>
   );
 }

@@ -1,33 +1,4 @@
-type CalculationResult = {
-  duty?: number;
-  tax?: number;
-  customs_value?: number;
-  rate_percent?: number;
-  tax_rate_percent?: number;
-  total_landed_cost?: number;
-  exporter_input?: string;
-  importer_input?: string;
-  hs_code?: string;
-  agreement?: string;
-  customs_basis?: string;
-  effectiveDate?: string; // show effective date returned by backend
-  chosenTariff?: { rate?: number; source?: string }; // debug info
-  ok?: boolean;
-  error?: string;
-  hint?: string;
-} | null;
-
-// Transport-layer / interceptor-normalized error (object) OR legacy string
-type CalcTransportError =
-  | {
-      ok?: false;
-      status?: number | null;
-      message: string;
-      hint?: string | null;
-      raw?: any;
-    }
-  | string
-  | null;
+import { type CalculationResult, type CalcTransportError } from "../api/calculator";
 
 const formatUSD = (value?: number) =>
   typeof value === "number"

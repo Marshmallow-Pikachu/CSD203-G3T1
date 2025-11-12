@@ -1,52 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api/client";
 // For search bar
 import { useState } from "react";
-import AutocompleteSearch from "./AutocompleteSearch";
-
-type Tariff = {
-  exporter_code: string;
-  exporter_name: string;
-  importer_code: string;
-  importer_name: string;
-  importer_customs: string;
-  importer_tax: string;
-  agreement_code: string;
-  agreement_name: string;
-  hs_code: string;
-  hs_description: string; // product
-  rate_percent: number; // tariff rate
-  valid_from: string;
-  valid_to: string; // newly added column
-};
+import AutocompleteSearch from "./forms/AutocompleteSearch";
+import { fetchTariffsTable, type TariffRow } from "../api/table";
 
 export default function Table() {
-  // call api to get data 
-  const { data, isLoading, error } = useQuery<Tariff[]>({
+  const { data, isLoading, error } = useQuery<TariffRow[]>({
     queryKey: ["tariffs", "all"],
-    queryFn: async () => {
-      const res = await api.get("/api/v1/tariffs/table");
-      return res.data as Tariff[];
-    },
+    queryFn: fetchTariffsTable,
     staleTime: 30_000,
     retry: 1,
   });
 
-  // for search bar
-  const [filteredData, setFilteredData] = useState<Tariff[]>([]);
-  const displayData = filteredData.length > 0 || filteredData.length === 0 ? filteredData : data;
+  const [filteredData, setFilteredData] = useState<TariffRow[]>([]);
+  const displayData = (filteredData.length ? filteredData : data) ?? [];
 
-  if (isLoading) {
-    return <div className="p-6 text-center text-slate-500">Loading…</div>;
-  }
+  if (isLoading) return <div className="p-6 text-center text-slate-500">Loading…</div>;
+  if (error) return <div className="p-6 text-center text-red-600">Failed to load.</div>;
 
-  if (error) {
-    return (
-      <div className="p-6 text-center text-red-600">
-        Failed to load.
-      </div>
-    );
-  }
 
   return (
     <>

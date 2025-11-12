@@ -1,5 +1,25 @@
 import {api} from "./client";
 
+export interface CalculateFields {
+  productDescription: string;
+  hsCode: string;
+  exporter: string;
+  importer: string;
+  agreement: string;
+  goods_value: number;
+  quantity: number;
+  freight: number;
+  insurance: number;
+  effectiveDate: string; // yyyy-MM-dd (input type="date")
+}
+
+/** Callbacks used by the parent page to show results in the right panel. */
+export interface CalculatorFormProps {
+  onCalculating?: (payload: any) => void;
+  onResult?: (data: any) => void;
+  onError?: (error: any) => void;
+}
+
 export type CalculatorRequest = {
   exporter: string;
   importer: string;
@@ -11,6 +31,37 @@ export type CalculatorRequest = {
   insurance?: number;
   effectiveDate?: string | Date; // accept Date for UI convenience, will be normalized
 };
+
+export type CalculationResult = {
+  duty?: number;
+  tax?: number;
+  customs_value?: number;
+  rate_percent?: number;
+  tax_rate_percent?: number;
+  total_landed_cost?: number;
+  exporter_input?: string;
+  importer_input?: string;
+  hs_code?: string;
+  agreement?: string;
+  customs_basis?: string;
+  effectiveDate?: string; // show effective date returned by backend
+  chosenTariff?: { rate?: number; source?: string }; // debug info
+  ok?: boolean;
+  error?: string;
+  hint?: string;
+} | null;
+
+// Transport-layer / interceptor-normalized error (object) OR legacy string
+export type CalcTransportError =
+  | {
+      ok?: false;
+      status?: number | null;
+      message: string;
+      hint?: string | null;
+      raw?: any;
+    }
+  | string
+  | null;
 
 // Helper: normalize effectiveDate to ISO yyyy-MM-dd (backend expects yyyy-MM-dd)
 function toIsoDateString(d?: string | Date): string | undefined {
