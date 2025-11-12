@@ -1,5 +1,7 @@
 import Logo from "../../assets/google.svg?react";
 
+const GOOGLE_AUTH_URL = "http://localhost:8080/login/oauth2/code/google";
+
 const go = (url: string) => {
   window.location.href = url;
 };
