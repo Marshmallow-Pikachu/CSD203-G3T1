@@ -264,4 +264,25 @@ class TariffServiceIT {
     //     assertTrue(validFrom.isBefore(pastDate) || validFrom.isEqual(pastDate));
     // }
 
+    @Test
+    void testGetTariffInfoWithNullImporter() {
+        assertThrows(Exception.class, () -> {
+            tariffService.getTariffInfo("SG", null, "010121", "MFN");
+        });
+    }
+
+    @Test
+    void testGetTariffInfoWithInvalidCountry() {
+        assertThrows(EmptyResultDataAccessException.class, () -> {
+            tariffService.getTariffInfo("INVALID", "US", "010121", "MFN");
+        });
+    }
+
+    @Test
+    void testListTariffsWithNullFilters() {
+        List<Map<String, Object>> results = tariffService.listTariffs(null, null, null);
+        assertNotNull(results);
+    }
+
+
 }
