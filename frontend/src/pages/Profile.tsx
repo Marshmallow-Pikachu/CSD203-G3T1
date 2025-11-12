@@ -73,18 +73,6 @@ useEffect(() => {
         ) : (
           <p className="text-gray-500">No profile data available.</p>
         )}
-
-
-        {token && (
-          <div className="mt-4 text-left bg-gray-100 rounded-lg p-3">
-            <p className="text-xs font-mono text-gray-600 break-all">
-              <strong>JWT Token (for testing):</strong>
-              <br />
-              {token}
-            </p>
-          </div>
-        )}
-
         <div className="pt-4">
           <Button onClick={() => handleLogout(token, navigate)}>Logout</Button>
         </div>
