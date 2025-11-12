@@ -75,14 +75,15 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                 // === PUBLIC: SPA entry, login route, static assets ===
                 .requestMatchers(
                     "/", "/index.html", "/favicon.ico",
                     "/assets/**", "/static/**",
                     "/css/**", "/js/**", "/img/**",
-                    "/login"                          // your SPA login route
+                    "/login",
+                    "/oauth-callback"            
                 ).permitAll()
 
                 // === PUBLIC: Swagger, error, OAuth2 endpoints ===
@@ -129,7 +130,7 @@ public class WebSecurityConfig {
                 )
             )
             .oauth2Login(oauth2 -> oauth2
-                .loginPage("/login") // IMPORTANT: must be permitted above
+                .loginPage("/login") 
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 .successHandler(oAuth2LoginSuccessHandler)
                 .failureHandler(oAuth2LoginFailureHandler)
@@ -225,10 +226,11 @@ public class WebSecurityConfig {
                     return true;
                 }
 
-                // OAuth2 endpoints
-                if (path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/")) {
+                // OAuth2 endpoints and SPA callback handoff
+                if (path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/") || path.equals("/oauth-callback")) {
                     return true;
                 }
+
 
                 return false; // run JWT filter for everything else (notably /api/**)
             }
@@ -241,9 +243,8 @@ public class WebSecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-            "http://localhost:5173"
-            // Add more only if you host the frontend separately
-            // "https://<your-frontend>.azurestaticapps.net"
+            "http://localhost:5173",
+            "https://csd-assignment-app-e4ftdka3fjc3htca.southeastasia-01.azurewebsites.net" // add this
         ));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
         config.setAllowedHeaders(List.of("Authorization","Content-Type"));
