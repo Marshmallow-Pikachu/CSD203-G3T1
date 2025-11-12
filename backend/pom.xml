@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.ratewise</groupId>
 	<artifactId>ratewise</artifactId>
-	<version>0.1.7-SNAPSHOT</version>
+	<version>0.4.1-SNAPSHOT</version>
 	<name>RateWise</name>
 	<description>Tariff rate dashboard and calculator</description>
 	<url/>
@@ -111,6 +111,30 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+				<executions>
+					<!-- Prepare agent before tests run -->
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					
+					<!-- Generate report after tests -->
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

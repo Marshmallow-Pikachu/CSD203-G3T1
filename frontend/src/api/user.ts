@@ -1,4 +1,4 @@
-// src/api/logout.ts
+// src/api/user.ts
 import { api } from "./client";
 import { toast } from "react-hot-toast";
 import type { NavigateFunction } from "react-router-dom";
@@ -12,7 +12,7 @@ export const handleLogin = async (
 ) => {
   e.preventDefault();
 
-  // 👀 Debug: show full HTTP request details
+  // Debug: show full HTTP request details
   const requestDetails = {
     method: "POST",
     url: "/api/v1/auth/session",
