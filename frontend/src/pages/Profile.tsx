@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { api } from "../api/client";
-import Button from "../components/Button";
-import { handleLogout } from "../api/user";
+import Button from "../components/buttons/Button";
+import { handleLogout, getProfile} from "../api/user";
 
-type UserProfile = { username: string };
+type UserProfile = { username: string, role: string };
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -15,38 +14,39 @@ export default function Profile() {
   // Read once; no need to keep token in React state
   const token = localStorage.getItem("accessToken");
 
-  useEffect(() => {
-    // If no token, bounce to login
-    if (!token) {
-      toast.error("No token found. Please log in again.");
-      navigate("/login");
-      return;
-    }
+useEffect(() => {
+  // If no token, bounce to login
+  if (!token) {
+    toast.error("No token found. Please log in again.");
+    navigate("/login");
+    return;
+  }
 
-    let cancelled = false;
 
-    (async () => {
-      try {
-        const { data } = await api.get<UserProfile>("/api/v1/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!cancelled) setProfile(data);
-      } catch (err) {
-        if (!cancelled) {
-          console.error("Failed to load profile", err);
-          toast.error("Session expired. Please log in again.");
-          localStorage.removeItem("accessToken");
-          navigate("/login");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+  let cancelled = false;
+  const fetchProfile = async () => {
+    try {
+      const data = await getProfile(token); 
+      if (!cancelled) setProfile(data);
+    } catch (err) {
+      if (!cancelled) {
+        console.error("Failed to load profile", err);
+        toast.error("Session expired. Please log in again.");
+        localStorage.removeItem("accessToken");
+        navigate("/login");
       }
-    })();
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  };
 
-    return () => {
-      cancelled = true; // avoid state updates after unmount
-    };
-  }, [navigate, token]);
+  fetchProfile();
+
+  return () => {
+    cancelled = true; // avoid state updates after unmount
+  };
+}, [navigate, token]);
+
 
   if (loading) {
     return (
@@ -62,24 +62,17 @@ export default function Profile() {
         <h2 className="text-2xl font-bold text-gray-800">User Profile</h2>
 
         {profile ? (
+          <div>
           <p className="text-gray-700">
             <strong>Username:</strong> {profile.username}
           </p>
+          <p className="text-gray-700">
+            <strong>Role:</strong> {profile.role}
+          </p>
+          </div>
         ) : (
           <p className="text-gray-500">No profile data available.</p>
         )}
-
-        {/* Debug token block (remove in production) */}
-        {token && (
-          <div className="mt-4 text-left bg-gray-100 rounded-lg p-3">
-            <p className="text-xs font-mono text-gray-600 break-all">
-              <strong>JWT Token (for testing):</strong>
-              <br />
-              {token}
-            </p>
-          </div>
-        )}
-
         <div className="pt-4">
           <Button onClick={() => handleLogout(token, navigate)}>Logout</Button>
         </div>

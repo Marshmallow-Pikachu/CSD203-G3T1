@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
-import { RateBadge, Badge, Row } from "./Blocks";
 
 type Tariff = {
   hs_code: string;
@@ -33,7 +32,7 @@ export default function Query() {
     staleTime: 30_000,
     retry: 1,
   });
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -57,9 +56,9 @@ export default function Query() {
       {error && <div className="text-sm text-red-600">Failed to load tariffs.</div>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data?.map((t) => (
+        {data?.map((t, idx) => (
           <article
-            key={`${t.hs_code}-${t.agreement_code}-${t.exporter_code}-${t.importer_code}`}
+            key={`${t.hs_code}-${t.agreement_code}-${t.exporter_code}-${t.importer_code}-${idx}`}
             className="rounded-lg border p-4 bg-white"
           >
             <div className="flex justify-between items-start mb-2">

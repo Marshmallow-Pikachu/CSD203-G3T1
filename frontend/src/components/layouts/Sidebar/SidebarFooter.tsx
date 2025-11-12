@@ -26,7 +26,7 @@ export function SidebarFooter({
           </button>
 
           <button
-            onClick={() => handleLogout(token, navigate)}
+            onClick={() => handleLogout(token)}
             className={`mt-2 flex w-full items-center rounded-xl text-sm font-medium transition-colors text-red-700 ${
               collapsed ? "justify-center p-2" : "gap-3 px-3 py-2"
             } border border-red-300 hover:bg-red-50`}

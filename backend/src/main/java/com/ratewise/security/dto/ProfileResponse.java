@@ -10,4 +10,5 @@ public class ProfileResponse {
     private final String userId;
     private final String username;
     private final String email;
+    private final String role;
 }

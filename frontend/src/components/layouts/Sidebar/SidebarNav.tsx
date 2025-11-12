@@ -1,13 +1,25 @@
 import { NavLink } from "react-router-dom";
-import { LayoutGrid, Calculator, Table } from "lucide-react";
+import { LayoutGrid, Calculator, Table, ChartSpline, Shield } from "lucide-react";
 
-const navItems = [
+const baseNavItems = [
   { to: "/home", label: "Dashboard", icon: LayoutGrid },
   { to: "/calculator", label: "Calculator", icon: Calculator },
   { to: "/tariffs", label: "Tariffs", icon: Table },
+  { to: "/graph", label: "Trends", icon: ChartSpline },
 ];
 
 export function SidebarNav({ collapsed }: { collapsed: boolean }) {
+  const storedRole = localStorage.getItem("userRole");
+  let navItems = [...baseNavItems];
+  // Use an if-statement to append the admin link if needed
+  if (storedRole === "ADMIN") {
+    navItems.push({
+      to: "/admin",
+      label: "Admin Panel",
+      icon: Shield,
+    });
+  }
+
   return (
     <nav className="mt-2 flex-1 space-y-1 px-2">
       {navItems.map(({ to, label, icon: Icon }) => (
