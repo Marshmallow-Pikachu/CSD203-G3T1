@@ -173,8 +173,8 @@ public class TariffService {
               ON agreements.id = tariff_rates.agreement_id
             JOIN tax_rules
               ON tax_rules.country_id = importer.id
-            ORDER BY exporter ASC, importer ASC, hs_code ASC
-        """;
+            ORDER BY exporter.country_code ASC, importer.country_code ASC, hs_codes.hs_code ASC 
+            """; 
 
     return jdbc.queryForList(sql);
   }
