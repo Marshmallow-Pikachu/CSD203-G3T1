@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,6 +22,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import org.springframework.web.cors.CorsConfiguration;
@@ -72,48 +77,64 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // for swagger UI
-                        .requestMatchers(
-                            "/v3/api-docs/**",
-                            "/swagger-ui/**",
-                            "/swagger-ui.html"
-                        ).permitAll()
-                        .requestMatchers("/error").permitAll()
-                        // OAuth2 endpoints
-                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                        // Public authentication endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/registration").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/session").permitAll()
-                        // Protected authentication endpoints (any authenticated user)
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/auth/session").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/profile").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/validation").hasAnyRole("ADMIN", "USER")
+                // === PUBLIC: SPA entry, login route, static assets ===
+                .requestMatchers(
+                    "/", "/index.html", "/favicon.ico",
+                    "/assets/**", "/static/**",
+                    "/css/**", "/js/**", "/img/**",
+                    "/login"                          // your SPA login route
+                ).permitAll()
 
-                        .requestMatchers("/api/v1/health/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers("/db/**").hasAnyRole("ADMIN", "USER")
+                // === PUBLIC: Swagger, error, OAuth2 endpoints ===
+                .requestMatchers(
+                    "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+                    "/error",
+                    "/oauth2/**", "/login/oauth2/**"
+                ).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/calculator/landed-cost").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/tariffs/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.GET,"/api/v1/countries/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.GET,"/api/v1/agreements/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.GET,"/api/v1/hscodes/**").hasAnyRole("ADMIN", "USER")
+                // === PUBLIC: username/password login APIs ===
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/registration").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/session").permitAll()
 
-                        // Admin-only endpoints
-                        .requestMatchers("/api/v1/admin/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "api/v1/admin/roles").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,"/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE,"/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST,"/api/v1/admin/tariffs").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/api/v1/admin/tariffs").hasRole("ADMIN")
+                // === AUTHENTICATED (USER or ADMIN) ===
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/auth/session").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.GET,    "/api/v1/auth/profile").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.GET,    "/api/v1/auth/validation").hasAnyRole("ADMIN","USER")
 
-                        // Require authentication for any other request
-                        .anyRequest().hasRole("ADMIN"))
-                .oauth2Login(oauth2 -> oauth2
-                    .userInfoEndpoint(userInfo -> userInfo
-                        .userService(customOAuth2UserService))
-                    .successHandler(oAuth2LoginSuccessHandler)
-                    .failureHandler(oAuth2LoginFailureHandler))
+                .requestMatchers("/api/v1/health/**").hasAnyRole("ADMIN","USER")
+                .requestMatchers("/db/**").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.POST, "/api/v1/calculator/landed-cost").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.GET,  "/api/v1/tariffs/**").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.GET,  "/api/v1/countries/**").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.GET,  "/api/v1/agreements/**").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.GET,  "/api/v1/hscodes/**").hasAnyRole("ADMIN","USER")
+
+                // === ADMIN-ONLY ===
+                .requestMatchers("/api/v1/admin/users/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,    "/api/v1/admin/roles").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,    "/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/admin/tariffs/{id}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,   "/api/v1/admin/tariffs").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,    "/api/v1/admin/tariffs").hasRole("ADMIN")
+
+                // Everything else stays public so the SPA can client-route
+                .anyRequest().permitAll()
+            )
+            .exceptionHandling(ex -> ex
+                // APIs should return 401, not redirect to Google
+                .defaultAuthenticationEntryPointFor(
+                    new HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED),
+                    new AntPathRequestMatcher("/api/**")
+                )
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .loginPage("/login") // IMPORTANT: must be permitted above
+                .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                .successHandler(oAuth2LoginSuccessHandler)
+                .failureHandler(oAuth2LoginFailureHandler)
+            )
+
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .build();
     }
@@ -177,27 +198,39 @@ public class WebSecurityConfig {
 
             @Override
             protected boolean shouldNotFilter(HttpServletRequest request) {
-                // Only run JWT auth for API paths; skip everything else (static, SPA, swagger, etc.)
                 String path = request.getRequestURI();
                 String method = request.getMethod();
 
-                // Skip JWT validation for SwaggerUI
+                // Swagger
                 if (path.startsWith("/v3/api-docs/") ||
                     path.startsWith("/swagger-ui/") ||
                     path.equals("/swagger-ui.html")) {
                     return true;
                 }
 
-                // Skip JWT validation for public authentication endpoints only
-                if (path.equals("/api/v1/auth/registration") && "POST".equals(method)) {
-                    return true;
-                }
-                if (path.equals("/api/v1/auth/session") && "POST".equals(method)) {
+                // Public auth (username/password)
+                if (path.equals("/api/v1/auth/registration") && "POST".equals(method)) return true;
+                if (path.equals("/api/v1/auth/session") && "POST".equals(method)) return true;
+
+                // SPA entry, static assets, and login page
+                if (path.equals("/") ||
+                    path.equals("/index.html") ||
+                    path.equals("/favicon.ico") ||
+                    path.startsWith("/assets/") ||
+                    path.startsWith("/static/") ||
+                    path.startsWith("/css/") ||
+                    path.startsWith("/js/") ||
+                    path.startsWith("/img/") ||
+                    path.equals("/login")) {
                     return true;
                 }
 
-                // Skip for root path
-                return path.equals("/");
+                // OAuth2 endpoints
+                if (path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/")) {
+                    return true;
+                }
+
+                return false; // run JWT filter for everything else (notably /api/**)
             }
         };
     }
