@@ -1,4 +1,5 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import Logo from "../../../assets/RateWise.svg?react";
 
 export function SidebarHeader({ collapsed, setCollapsed }: any) {
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
@@ -8,9 +9,7 @@ export function SidebarHeader({ collapsed, setCollapsed }: any) {
       <div
         className={`flex items-center gap-2 ${collapsed ? "justify-center w-full" : ""}`}
       >
-        <div className="grid h-9 w-9 place-items-center rounded-2xl bg-gray-900 text-white font-bold">
-          R
-        </div>
+        <Logo className="size-8" />
         {!collapsed && <span className="text-lg font-semibold">RateWise</span>}
       </div>
 
