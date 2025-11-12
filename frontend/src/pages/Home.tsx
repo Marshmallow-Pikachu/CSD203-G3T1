@@ -1,13 +1,57 @@
-export default function Home() {
-  const username = localStorage.getItem("username");
+import Tile from "../components/buttons/Tile";
+import { LayoutGrid, Calculator, Table, ChartSpline, Shield } from "lucide-react";
 
-  return (
-    <section className="space-y-4">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p className="text-gray-600">
-        Welcome to RateWise! {username} Use the sidebar to
-        access the calculator and tariff data.
-      </p>
-    </section>
-  );
+export default function Home() {
+    const username = localStorage.getItem("username");
+    const storedRole = localStorage.getItem("userRole");
+
+    let navItems = [
+        { to: "/home", title: "Dashboard", icon: LayoutGrid },
+        { to: "/calculator", title: "Calculator", icon: Calculator },
+        { to: "/tariffs", title: "Tariffs", icon: Table },
+        { to: "/graph", title: "Trends", icon: ChartSpline },
+    ];
+    if (storedRole === "ADMIN") {
+        navItems.push({
+            to: "/admin",
+            title: "Admin Panel",
+            icon: Shield,
+        });
+    }
+
+    return (
+        <section className="space-y-4">
+            <h1 className="text-2xl font-semibold">Dashboard</h1>
+            <p className="text-gray-600">
+                Welcome to RateWise! {username} Use the sidebar to
+                access the calculator and tariff data.
+            </p>
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)", // 3 tiles per row
+                    gap: "24px",
+                }}
+            >
+                {navItems.map(({ to, title, icon: Icon }) => (
+                    <div
+                        style={{
+                            aspectRatio: "1 / 1",
+                            width: "80%",
+                        }}
+                    >
+                        <Tile
+                            title={title}
+                            onClick={() => {
+                                if (to) {
+                                    window.location.href = to;
+                                }
+                            }}
+                            icon={Icon}
+                        />
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
 }
