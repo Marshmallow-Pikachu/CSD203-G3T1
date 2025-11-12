@@ -38,7 +38,7 @@ export const handleLogin = async (
     toast.success("Login successful!");
     setTimeout(() => navigate("/home"), 1500);
   } catch (error: any) {
-    const msg = error?.response?.data?.message || error.message || "Unknown error";
+    // const msg = error?.response?.data?.message || error.message || "Unknown error";
 
     // // Debug failed request
     // alert(
