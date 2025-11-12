@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
-import { RateBadge, Badge, Row } from "./Blocks";
 
 type Tariff = {
   hs_code: string;

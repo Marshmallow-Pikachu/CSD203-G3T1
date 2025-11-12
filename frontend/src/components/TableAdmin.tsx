@@ -5,6 +5,15 @@ import TariffForm from "./TariffForm";
 import { Modal, Th, Td } from "./TableAdminComponents";
 import { type TariffRow, fetchAdminTariffs } from "../api/table";
 
+interface TariffPayload {
+  exporterCode: string;
+  importerCode: string;
+  hsCode: string;
+  agreementCode: string;
+  ratePercent: number;
+  validFrom: string;
+  validTo?: string | null;
+}
 
 export default function TableAdmin() {
   const queryClient = useQueryClient();
@@ -48,8 +57,8 @@ const rows = useMemo(() => {
   /* ====== Mutations (CRUD) ====== */
 
   // Create
-  const createMutation = useMutation({
-    mutationFn: async (payload) => {
+  const createMutation = useMutation( {
+    mutationFn: async (payload : TariffPayload) => {
       // (debug) show request
       alert(
         "Sending HTTP Request:\n\n" +
@@ -234,7 +243,7 @@ const rows = useMemo(() => {
                 ) : (
                   rows.map((r, i) => (
                     <tr
-                      key={(r.id ?? `${r.hs_code}-${r.importer}-${r.exporter}`) as string}
+                      key={r.id}
                       className={`transition-colors hover:bg-gray-50 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}
                     >
                       <Td mono>{r.id ?? "—"}</Td>
