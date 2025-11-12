@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
+// For search bar
+import { useState } from "react";
+import AutocompleteSearch from "./AutocompleteSearch";
 
 type Tariff = {
   exporter_code: string;
@@ -18,8 +21,7 @@ type Tariff = {
 };
 
 export default function Table() {
-  // Start Coding Table here & call api to get data
-
+  // call api to get data 
   const { data, isLoading, error } = useQuery<Tariff[]>({
     queryKey: ["tariffs", "all"],
     queryFn: async () => {
@@ -29,6 +31,10 @@ export default function Table() {
     staleTime: 30_000,
     retry: 1,
   });
+
+  // for search bar
+  const [filteredData, setFilteredData] = useState<Tariff[]>([]);
+  const displayData = filteredData.length > 0 || filteredData.length === 0 ? filteredData : data;
 
   if (isLoading) {
     return <div className="p-6 text-center text-slate-500">Loading…</div>;
@@ -50,6 +56,22 @@ export default function Table() {
             <h1 className="text-2xl font-semibold text-slate-800">Tariff Table</h1>
           </header>
 
+          {/* Search bar */}
+          <div className="flex justify-center">
+            <AutocompleteSearch
+              data={data || []}
+              searchFields={[
+                "exporter_name",
+                "importer_name",
+                "hs_code",
+                "hs_description",
+                "agreement_name",
+              ]}
+              onFilter={setFilteredData}
+              placeholder="Search by exporter, importer, HS code, product, or agreement..."
+            />
+          </div>
+
           <div className="bg-white rounded-lg border border-slate-200 p-5 overflow-hidden">
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
               <table className="w-full">
@@ -68,7 +90,7 @@ export default function Table() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {data?.map((item, idx) => (
+                  {displayData?.map((item, idx) => (
                     <tr key={`${item.hs_code}-${item.importer_code}-${item.exporter_code}-${idx}`} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-left text-sm whitespace-nowrap">
                         {item.exporter_name} ({item.exporter_code})
