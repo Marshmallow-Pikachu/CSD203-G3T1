@@ -1,3 +1,5 @@
+
+
 export default function Home() {
   const username = localStorage.getItem("username");
 
@@ -8,6 +10,7 @@ export default function Home() {
         Welcome to RateWise! {username} Use the sidebar to
         access the calculator and tariff data.
       </p>
+      
     </section>
   );
 }
