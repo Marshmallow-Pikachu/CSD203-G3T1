@@ -1,9 +1,11 @@
 import Tile from "../components/buttons/Tile";
+import { useNavigate } from "react-router-dom";
 import { LayoutGrid, Calculator, Table, ChartSpline, Shield } from "lucide-react";
 
 export default function Home() {
     const username = localStorage.getItem("username");
     const storedRole = localStorage.getItem("userRole");
+    const navigate = useNavigate();
 
     let navItems = [
         { to: "/home", title: "Dashboard", icon: LayoutGrid },
@@ -44,7 +46,7 @@ export default function Home() {
                             title={title}
                             onClick={() => {
                                 if (to) {
-                                    window.location.href = to;
+                                     navigate(to);
                                 }
                             }}
                             icon={Icon}
